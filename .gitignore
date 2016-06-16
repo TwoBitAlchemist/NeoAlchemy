@@ -1,0 +1,21 @@
+# Vim swap files
+*.swp
+
+# Byte-compiled / optimized / DLL files
+.cache/*
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+bin/
+include/
+lib/
+lib64
+node_modules/
+typings/
+*.egg*
+*.cfg
+
+# Installer logs
+npm-debug.log
+pip-selfcheck.json
