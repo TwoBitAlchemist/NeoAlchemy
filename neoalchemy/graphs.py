@@ -12,9 +12,8 @@ class Graph(GraphDatabase):
     A thin wrapper around the Neo4J Bolt driver's GraphDatabase class
     providing a convenient auto-connection during initialization.
     """
-    def __init__(self, url=None, **kw):
-        if url is not None:
-            self.connect(url, **kw)
+    def __init__(self, url='bolt://localhost', **kw):
+        self.connect(url, **kw)
 
     def connect(self, url, user='neo4j', password='neo4j'):
         """
