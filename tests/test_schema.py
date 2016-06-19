@@ -28,12 +28,18 @@ def test_node_duplicate_property():
 def test_node_one_index():
     Person = NodeType('Person', Property('name', indexed=True))
     assert Person.schema == 'CREATE INDEX ON :Person(name)'
+    assert Person.name.indexed
+    assert not Person.name.unique
+    assert not Person.name.required
 
 
 def test_node_one_unique():
     Person = NodeType('Person', Property('SSN', unique=True))
     assert Person.schema == ('CREATE CONSTRAINT ON (node:Person) '
                              'ASSERT node.SSN IS UNIQUE')
+    assert Person.SSN.indexed
+    assert Person.SSN.unique
+    assert not Person.SSN.required
     with pytest.warns(UserWarning):
         Person = NodeType('Person',
             Property('SSN', unique=True, indexed=False)
@@ -44,6 +50,9 @@ def test_node_one_required():
     Person = NodeType('Person', Property('name', required=True))
     assert Person.schema == ('CREATE CONSTRAINT ON (node:Person) '
                              'ASSERT exists(node.name)')
+    assert not Person.name.indexed
+    assert not Person.name.unique
+    assert Person.name.required
 
 
 def test_node_one_required_and_indexed():
@@ -51,6 +60,9 @@ def test_node_one_required_and_indexed():
     assert Person.schema == ('CREATE INDEX ON :Person(name)\n'
                              'CREATE CONSTRAINT ON (node:Person) '
                              'ASSERT exists(node.name)')
+    assert Person.name.indexed
+    assert not Person.name.unique
+    assert Person.name.required
 
 
 def test_node_one_required_and_unique():
@@ -59,3 +71,6 @@ def test_node_one_required_and_unique():
                              'ASSERT node.name IS UNIQUE\n'
                              'CREATE CONSTRAINT ON (node:Person) '
                              'ASSERT exists(node.name)')
+    assert Person.name.indexed
+    assert Person.name.unique
+    assert Person.name.required

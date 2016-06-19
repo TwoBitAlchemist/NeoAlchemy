@@ -76,3 +76,10 @@ class NodeType(Labeled):
     @property
     def schema(self):
         return '\n'.join(filter(bool, map(repr, self._schema.values())))
+
+    def __getattribute__(self, name):
+        schema = object.__getattribute__(self, '_schema')
+        try:
+            return schema[name]
+        except KeyError:
+            return object.__getattribute__(self, name)
