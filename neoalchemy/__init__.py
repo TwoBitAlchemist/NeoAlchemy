@@ -1,1 +1,1 @@
-from .graphs import Graph
+from .graph import Graph
