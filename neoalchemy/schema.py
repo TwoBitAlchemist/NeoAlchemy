@@ -46,8 +46,7 @@ class Property(Labeled):
         return self.schema
 
     def __hash__(self):
-        return hash('::'.join((self.label,
-                               self._key)))
+        return hash('::'.join((self.label, self._key)))
 
     def __eq__(self, other):
         try:
