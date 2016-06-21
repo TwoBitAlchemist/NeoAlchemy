@@ -1,26 +1,7 @@
 from collections import OrderedDict
 
 
-class Labeled(object):
-    @property
-    def label(self):
-        return self._label
-
-    @label.setter
-    def label(self, value):
-        if getattr(self, '_label', None):
-            raise AttributeError("Cannot reset label on '%s' once "
-                                 "initialized." % self.__class__.__name__)
-        self._label = str(value)
-
-    def __str__(self):
-        try:
-            return self.schema
-        except AttributeError:
-            return super().__str__()
-
-
-class Property(Labeled):
+class Property(object):
     def __init__(self, property_key,
                  indexed=False, unique=False, required=False):
         self.__key = str(property_key)
@@ -31,21 +12,6 @@ class Property(Labeled):
     @property
     def key(self):
         return self.__key
-
-    @property
-    def schema(self):
-        label, key = self.label, self.__key
-        schema = []
-        if self.unique:
-            schema.append('CREATE CONSTRAINT ON (node:%s) '
-                          'ASSERT node.%s IS UNIQUE' % (label, key))
-        elif self.indexed:
-            schema.append('CREATE INDEX ON :%s(%s)' % (label, key))
-
-        if self.required:
-            schema.append('CREATE CONSTRAINT ON (node:%s) '
-                          'ASSERT exists(node.%s)' % (label, key))
-        return '\n'.join(schema)
 
     def __hash__(self):
         return hash('::'.join((self.label, self.__key)))
@@ -59,8 +25,22 @@ class Property(Labeled):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __str__(self):
+        label, key = self.label, self.__key
+        schema = []
+        if self.unique:
+            schema.append('CREATE CONSTRAINT ON (node:%s) '
+                          'ASSERT node.%s IS UNIQUE' % (label, key))
+        elif self.indexed:
+            schema.append('CREATE INDEX ON :%s(%s)' % (label, key))
 
-class NodeType(Labeled):
+        if self.required:
+            schema.append('CREATE CONSTRAINT ON (node:%s) '
+                          'ASSERT exists(node.%s)' % (label, key))
+        return '\n'.join(schema)
+
+
+class NodeType(object):
     def __init__(self, label, *properties):
         self.__label = label
         self.__schema = OrderedDict()
@@ -78,12 +58,11 @@ class NodeType(Labeled):
     def label(self):
         return self.__label
 
-    @property
-    def schema(self):
-        return '\n'.join(filter(bool, map(str, self.__schema.values())))
-
     def __getattr__(self, attr):
         try:
             return self.__schema[attr]
         except KeyError:
-            super().__getattr__(attr)
+            super().__getattribute__(attr)
+
+    def __str__(self):
+        return '\n'.join(filter(bool, map(str, self.__schema.values())))
