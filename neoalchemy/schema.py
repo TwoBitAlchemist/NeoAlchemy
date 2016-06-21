@@ -1,5 +1,3 @@
-import warnings
-
 from collections import OrderedDict
 
 
@@ -15,16 +13,19 @@ class Labeled(object):
                                  "initialized." % self.__class__.__name__)
         self._label = str(value)
 
+    def __str__(self):
+        try:
+            return self.schema
+        except AttributeError:
+            return super().__str__()
+
 
 class Property(Labeled):
     def __init__(self, property_key,
                  indexed=False, unique=False, required=False):
         self._key = str(property_key)
-        self.indexed = bool(indexed)
         self.unique = bool(unique)
-        if self.unique and not self.indexed:
-            self.indexed = True
-            warnings.warn('Unique Constraints are automatically indexed.')
+        self.indexed = self.unique or bool(indexed)
         self.required = bool(required)
 
     @property
@@ -41,9 +42,6 @@ class Property(Labeled):
             schema.append('CREATE CONSTRAINT ON (node:%s) '
                           'ASSERT exists(node.%s)' % (label, key))
         return '\n'.join(schema)
-
-    def __repr__(self):
-        return self.schema
 
     def __hash__(self):
         return hash('::'.join((self.label, self._key)))
@@ -65,7 +63,7 @@ class NodeType(Labeled):
         for prop in properties:
             if not isinstance(prop, Property):
                 raise TypeError("Must be a Property object. "
-                                "'%s' given." % prop)
+                                "'%s' given." % prop.__class__)
             prop.label = label
             if prop._key in self._schema:
                 raise ValueError("Duplicate property found: '%s'" % prop._key)
@@ -74,7 +72,7 @@ class NodeType(Labeled):
 
     @property
     def schema(self):
-        return '\n'.join(filter(bool, map(repr, self._schema.values())))
+        return '\n'.join(filter(bool, map(str, self._schema.values())))
 
     def __getattribute__(self, name):
         schema = object.__getattribute__(self, '_schema')

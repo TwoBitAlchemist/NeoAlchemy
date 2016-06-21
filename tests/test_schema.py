@@ -40,10 +40,6 @@ def test_node_one_unique():
     assert Person.SSN.indexed
     assert Person.SSN.unique
     assert not Person.SSN.required
-    with pytest.warns(UserWarning):
-        Person = NodeType('Person',
-            Property('SSN', unique=True, indexed=False)
-        )
 
 
 def test_node_one_required():
