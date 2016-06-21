@@ -10,7 +10,7 @@ from neo4j.v1 import GraphDatabase, basic_auth
 
 
 class QueryLog(OrderedDict):
-    MAX_LOG_SIZE = 5
+    MAX_LOG_SIZE = 100
 
     def __init__(self, max_size=None, *args, **kw):
         self.__log_line = 0
@@ -45,6 +45,7 @@ class Query(object):
         self.__log = QueryLog()
 
     def __call__(self, statement, **params):
+        """Syntactic sugar for query.run(statement, **params)"""
         return self.run(statement, **params)
 
     @property
@@ -67,14 +68,17 @@ class Reflect(object):
         self.__graph = graph
 
     def constraints(self):
+        """Fetch the current graph constraints"""
         constraints = self.__graph.query('CALL db.constraints()') or ()
         return (r['constraint'] for r in constraints)
 
     def indexes(self):
+        """Fetch the current graph indexes"""
         indexes = self.__graph.query('CALL db.indexes()') or ()
         return (r['index'] for r in indexes)
 
     def labels(self):
+        """Fetch the current graph labels"""
         labels = self.__graph.query('CALL db.labels()') or ()
         return (r['label'] for r in labels)
 
@@ -89,6 +93,16 @@ class Schema(object):
         self.__schema = dict()
 
     def add(self, nodetype, overwrite=False):
+        """
+        Add a NodeType to the schema.
+
+        If nodetype is already in the schema, does nothing and returns None.
+        If nodetype is not in the schema, and not in the database, the
+            appropriate schema-creating statements will be emitted.
+        If nodetype is not in the schema, but is in the database, the schema
+            will only be written if overwrite is set, in which case the
+            existing schema (if any) will be dropped.
+        """
         if nodetype.label in self.__schema:
             return
 
@@ -100,25 +114,45 @@ class Schema(object):
             return self.__graph.query(str(nodetype))
 
     def constraints(self):
+        """
+        Get current graph constraints lazily.
+
+        On first access, this fetches from the database. Afterwards, call
+        update() to refresh.
+        """
         if self.__constraints is None:
             self.__constraints = tuple(self.__reflect.constraints())
         return self.__constraints
 
     def indexes(self):
+        """
+        Get current graph indexes lazily.
+
+        On first access, this fetches from the database. Afterwards, call
+        update() to refresh.
+        """
         if self.__indexes is None:
             self.__indexes = tuple(self.__reflect.indexes())
         return self.__indexes
 
     def labels(self):
+        """
+        Get current graph labels lazily.
+
+        On first access, this fetches from the database. Afterwards, call
+        update() to refresh.
+        """
         if self.__labels is None:
             self.__labels = tuple(self.__reflect.labels())
         return self.__labels
 
     @property
     def ls(self):
+        """Cypher statements for currently defined schema"""
         return '\n'.join(filter(bool, map(str, self.__schema.values())))
 
     def update(self):
+        """Refresh graph constraints, indexes, and labels"""
         self.__constraints = tuple(self.__reflect.constraints())
         self.__indexes = tuple(self.__reflect.indexes())
         self.__labels = tuple(self.__reflect.labels())
@@ -180,4 +214,5 @@ class Graph(GraphDatabase):
             session.run('MATCH (all) DETACH DELETE all')
 
     def session(self):
+        """Syntactic sugar for graph.driver.session()"""
         return self.driver.session()

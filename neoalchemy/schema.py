@@ -23,14 +23,18 @@ class Labeled(object):
 class Property(Labeled):
     def __init__(self, property_key,
                  indexed=False, unique=False, required=False):
-        self._key = str(property_key)
+        self.__key = str(property_key)
         self.unique = bool(unique)
         self.indexed = self.unique or bool(indexed)
         self.required = bool(required)
 
     @property
+    def key(self):
+        return self.__key
+
+    @property
     def schema(self):
-        label, key = self.label, self._key
+        label, key = self.label, self.__key
         schema = []
         if self.unique:
             schema.append('CREATE CONSTRAINT ON (node:%s) '
@@ -44,7 +48,7 @@ class Property(Labeled):
         return '\n'.join(schema)
 
     def __hash__(self):
-        return hash('::'.join((self.label, self._key)))
+        return hash('::'.join((self.label, self.__key)))
 
     def __eq__(self, other):
         try:
@@ -58,25 +62,28 @@ class Property(Labeled):
 
 class NodeType(Labeled):
     def __init__(self, label, *properties):
-        self.label = label
-        self._schema = OrderedDict()
+        self.__label = label
+        self.__schema = OrderedDict()
         for prop in properties:
             if not isinstance(prop, Property):
                 raise TypeError("Must be a Property object. "
                                 "'%s' given." % prop.__class__)
             prop.label = label
-            if prop._key in self._schema:
-                raise ValueError("Duplicate property found: '%s'" % prop._key)
+            if prop.key in self.__schema:
+                raise ValueError("Duplicate property found: '%s'" % prop.key)
 
-            self._schema[prop._key] = prop
+            self.__schema[prop.key] = prop
+
+    @property
+    def label(self):
+        return self.__label
 
     @property
     def schema(self):
-        return '\n'.join(filter(bool, map(str, self._schema.values())))
+        return '\n'.join(filter(bool, map(str, self.__schema.values())))
 
-    def __getattribute__(self, name):
-        schema = object.__getattribute__(self, '_schema')
+    def __getattr__(self, attr):
         try:
-            return schema[name]
+            return self.__schema[attr]
         except KeyError:
-            return object.__getattribute__(self, name)
+            super().__getattr__(attr)
