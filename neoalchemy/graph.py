@@ -2,28 +2,64 @@
 A thin wrapper around the Neo4J Bolt driver's GraphDatabase class
 providing a convenient auto-connection during initialization.
 """
+from collections import OrderedDict
+
 import warnings
 
 from neo4j.v1 import GraphDatabase, basic_auth
+
+
+class QueryLog(OrderedDict):
+    MAX_LOG_SIZE = 5
+
+    def __init__(self, max_size=None, *args, **kw):
+        self.__log_line = 0
+        if max_size is not None:
+            self.__max_size = max_size
+
+    def __call__(self, statement):
+        line = self.__log_line
+        self[line] = statement
+        if len(self) > self.MAX_LOG_SIZE:
+            self.pop(line - self.MAX_LOG_SIZE)
+        self.__log_line += 1
+
+    def clear(self):
+        self.__log_line = 0
+        super().clear()
+
+    def __iter__(self):
+        return iter(self.values())
+
+    def __setitem__(self, key, value):
+        if key != self.__log_line:
+            raise KeyError('%s not writeable at '
+                           'line [%s].' % (self.__class__.__name__, key))
+        super().__setitem__(key, value)
 
 
 class Query(object):
     """Run queries on the Graph"""
     def __init__(self, graph):
         self.__graph = graph
+        self.__log = QueryLog()
 
-    def __call__(self, *args, **kw):
-        return self.run(*args, **kw)
+    def __call__(self, statement, **params):
+        return self.run(statement, **params)
+
+    @property
+    def log(self):
+        return self.__log
 
     def all(self):
         """MATCH (all) RETURN all"""
-        with self.__graph.session() as session:
-            return session.run('MATCH (all) RETURN all')
+        return self.run('MATCH (all) RETURN all')
 
-    def run(self, *args, **kw):
+    def run(self, statement, **params):
         """Run an arbitrary Cypher statement"""
         with self.__graph.session() as session:
-            return session.run(*args, **kw)
+            self.log(statement)
+            return session.run(statement, **params)
 
 
 class Reflect(object):
