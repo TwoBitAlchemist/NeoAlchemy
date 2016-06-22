@@ -69,12 +69,12 @@ class Reflect(object):
     def constraints(self):
         """Fetch the current graph constraints"""
         constraints = self.__graph.query('CALL db.constraints()') or ()
-        return (r['constraint'] for r in constraints)
+        return (r['description'] for r in constraints)
 
     def indexes(self):
         """Fetch the current graph indexes"""
         indexes = self.__graph.query('CALL db.indexes()') or ()
-        return (r['index'] for r in indexes)
+        return (r['description'] for r in indexes)
 
     def labels(self):
         """Fetch the current graph labels"""
