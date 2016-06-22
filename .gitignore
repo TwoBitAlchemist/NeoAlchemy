@@ -16,6 +16,9 @@ typings/
 *.egg*
 *.cfg
 
+# Sphinx docs
+build/*
+
 # Installer logs
 npm-debug.log
 pip-selfcheck.json
