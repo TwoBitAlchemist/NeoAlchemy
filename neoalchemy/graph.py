@@ -3,7 +3,6 @@ A thin wrapper around the Neo4J Bolt driver's GraphDatabase class
 providing a convenient auto-connection during initialization.
 """
 from collections import OrderedDict
-
 import warnings
 
 from neo4j.v1 import GraphDatabase, basic_auth

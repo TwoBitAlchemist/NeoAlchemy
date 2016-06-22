@@ -2,9 +2,9 @@ from collections import OrderedDict
 
 
 class Property(object):
-    def __init__(self, property_key,
+    def __init__(self, property_key=None,
                  indexed=False, unique=False, required=False):
-        self.__key = str(property_key)
+        self.__key = str(property_key) if property_key is not None else None
         self.unique = bool(unique)
         self.indexed = self.unique or bool(indexed)
         self.required = bool(required)
@@ -12,6 +12,13 @@ class Property(object):
     @property
     def key(self):
         return self.__key
+
+    @key.setter
+    def key(self, value):
+        if self.__key is not None:
+            raise AttributeError("Can't change key on %s "
+                                 "once set." % self.__class__.__name__)
+        self.__key = value
 
     def __hash__(self):
         return hash('::'.join((self.label, self.__key)))
@@ -58,6 +65,10 @@ class NodeType(object):
     def label(self):
         return self.__label
 
+    @property
+    def schema(self):
+        return self.__schema
+
     def __getattr__(self, attr):
         try:
             return self.__schema[attr]
@@ -66,3 +77,22 @@ class NodeType(object):
 
     def __str__(self):
         return '\n'.join(filter(bool, map(str, self.__schema.values())))
+
+
+class Node(type):
+    def __new__(metaclass, class_name, bases, attrs):
+        attrs['LABEL'] = attrs.get('LABEL', class_name)
+
+        def properties():
+            for attr_name, attr in attrs.items():
+                if isinstance(attr, Property):
+                    if attr.key is None:
+                        attr.key = attr_name
+                    yield attr
+
+        attrs['__nodetype__'] = NodeType(attrs['LABEL'], *properties())
+
+        if attrs['graph'] is not None:
+            attrs['graph'].schema.add(attrs['__nodetype__'])
+
+        return super().__new__(metaclass, class_name, bases, attrs)

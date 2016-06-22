@@ -1,2 +1,2 @@
 from .graph import Graph
-from .schema import NodeType, Property
+from .schema import Node, NodeType, Property
