@@ -8,10 +8,10 @@ def test_simple_labeled_node():
     with pytest.raises(TypeError):  # no label
         Node = NodeType()
     Node = NodeType('Node')
-    assert Node.label == 'Node'
+    assert Node.LABEL == 'Node'
     # cannot reset label once created
     with pytest.raises(AttributeError):
-        Node.label = 'bob'
+        Node.LABEL = 'bob'
     assert not str(Node)
 
 

@@ -2,7 +2,7 @@
 A thin wrapper around the Neo4J Bolt driver's GraphDatabase class
 providing a convenient auto-connection during initialization.
 """
-from collections import OrderedDict
+from collections import namedtuple, OrderedDict
 import warnings
 
 from neo4j.v1 import GraphDatabase, basic_auth
@@ -16,16 +16,17 @@ class QueryLog(OrderedDict):
         if max_size is not None:
             self.__max_size = max_size
 
-    def __call__(self, statement):
+    def __call__(self, query, params):
         line = self.__log_line
-        self[line] = statement
+        LogLine = namedtuple('LogLine', ('query', 'params'))
+        self[line] = LogLine(query=query, params=params)
         if len(self) > self.MAX_LOG_SIZE:
             self.pop(line - self.MAX_LOG_SIZE)
         self.__log_line += 1
 
     def clear(self):
         self.__log_line = 0
-        super().clear()
+        super(QueryLog, self).clear()
 
     def __iter__(self):
         return iter(self.values())
@@ -34,7 +35,7 @@ class QueryLog(OrderedDict):
         if key != self.__log_line:
             raise KeyError('%s not writeable at '
                            'line [%s].' % (self.__class__.__name__, key))
-        super().__setitem__(key, value)
+        super(QueryLog, self).__setitem__(key, value)
 
 
 class Query(object):
@@ -43,9 +44,9 @@ class Query(object):
         self.__graph = graph
         self.__log = QueryLog()
 
-    def __call__(self, statement, **params):
-        """Syntactic sugar for query.run(statement, **params)"""
-        return self.run(statement, **params)
+    def __call__(self, q, **params):
+        """Syntactic sugar for query.run(str(q), **params)"""
+        return self.run(str(q), **params)
 
     @property
     def log(self):
@@ -55,11 +56,11 @@ class Query(object):
         """MATCH (all) RETURN all"""
         return self.run('MATCH (all) RETURN all')
 
-    def run(self, statement, **params):
-        """Run an arbitrary Cypher statement"""
+    def run(self, query, **params):
+        """Run an arbitrary Cypher query"""
         with self.__graph.session() as session:
-            self.log(statement)
-            return session.run(statement, **params)
+            self.log(query, params)
+            return session.run(query, parameters=params)
 
 
 class Reflect(object):
@@ -102,12 +103,12 @@ class Schema(object):
             will only be written if overwrite is set, in which case the
             existing schema (if any) will be dropped.
         """
-        if nodetype.label in self.__schema:
+        if nodetype.LABEL in self.__schema:
             return
 
-        self.__schema[nodetype.label] = str(nodetype)
+        self.__schema[nodetype.LABEL] = str(nodetype)
         # Scan the graph for the schema
-        if overwrite or nodetype.label not in self.labels():
+        if overwrite or nodetype.LABEL not in self.labels():
             if overwrite:
                 self.__graph.query(str(nodetype).replace('CREATE', 'DROP'))
             return self.__graph.query(str(nodetype))
