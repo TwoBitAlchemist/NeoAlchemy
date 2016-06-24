@@ -1,15 +1,18 @@
 from collections import OrderedDict
 
+from six import add_metaclass
+
 from .cypher import Create
 
 
 class Property(object):
-    def __init__(self, property_key=None,
+    def __init__(self, property_key=None, type=str,
                  indexed=False, unique=False, required=False):
         self.__key = str(property_key) if property_key is not None else None
         self.unique = bool(unique)
         self.indexed = self.unique or bool(indexed)
         self.required = bool(required)
+        self.type = type
 
     @property
     def key(self):
@@ -20,7 +23,7 @@ class Property(object):
         if self.__key is not None:
             raise AttributeError("Can't change key on %s "
                                  "once set." % self.__class__.__name__)
-        self.__key = value
+        self.__key = str(value)
 
     def __hash__(self):
         return hash('::'.join((self.label, self.__key)))
@@ -85,14 +88,31 @@ class NodeType(object):
         return '\n'.join(filter(bool, map(str, self.__schema.values())))
 
 
-class NodeInterface(object):
-    def create(self):
-        params = {prop: getattr(self, prop)
-                  for prop in self.__nodetype__.schema}
-        return self.graph.query(Create(self.__nodetype__, **params))
+class PropertyDescriptor(object):
+    def __init__(self, property_obj):
+        self.__property = property_obj
+        self.__property.value = None
+
+    def __get__(self, obj, type=None):
+        if obj is None:
+            return self.__property
+        return self.__property.value
+
+    def __set__(self, obj, value):
+        if obj is None:
+            raise AttributeError("Can't set attribute.")
+
+        value = self.__property.type(value)
+        if (self.__property.value is not None and
+                self.__property.value != value):
+            obj.__changed__[self.__property.key] = value
+        self.__property.value = value
+
+    def __delete__(self, obj):
+        raise AttributeError("Can't remove attribute.")
 
 
-class Node(type):
+class NodeMeta(type):
     def __new__(mcs, class_name, bases, attrs):
         labels = [attrs.get('LABEL', class_name)]
         for base in bases:
@@ -102,16 +122,30 @@ class Node(type):
                 pass
 
         properties = []
-        for attr_name, attr in attrs.items():
-            if isinstance(attr, Property):
-                if attr.key is None:
-                    attr.key = attr_name
-                properties.append(attr)
+        for prop_name, prop in attrs.items():
+            if isinstance(prop, Property):
+                if prop.key is None:
+                    prop.key = prop_name
+                properties.append(prop)
+                attrs[prop_name] = PropertyDescriptor(prop)
 
         attrs['__nodetype__'] = NodeType(labels[0], *properties,
                                          extra_labels=labels[1:])
 
-        if attrs['graph'] is not None:
+        if attrs.get('graph') is not None:
             attrs['graph'].schema.add(attrs['__nodetype__'])
 
-        return super(Node, mcs).__new__(mcs, class_name, bases, attrs)
+        return super(NodeMeta, mcs).__new__(mcs, class_name, bases, attrs)
+
+
+@add_metaclass(NodeMeta)
+class Node(object):
+    def __init__(self, **kw):
+        self.__changed__ = {}
+        for prop in self.__nodetype__.schema:
+            setattr(self, prop, kw.get(prop))
+
+    def create(self):
+        params = {prop: getattr(self, prop)
+                  for prop in self.__nodetype__.schema}
+        return self.graph.query(Create(self.__nodetype__, **params))
