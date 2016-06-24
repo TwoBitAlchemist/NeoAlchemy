@@ -88,3 +88,9 @@ class OperatorInterface(object):
 
     def __rxor__(self, x):
         pass    # x ^ self
+
+    def __bool__(self, x):
+        pass    # bool(x)  Python 3
+
+    def __nonzero__(self, x):
+        pass    # bool(x)  Python 2

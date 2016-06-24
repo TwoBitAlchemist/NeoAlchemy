@@ -67,14 +67,14 @@ class Create(Verb):
 class Match(Verb):
     def __init__(self, *args, **kw):
         self.optional = bool(kw.pop(optional))
-        super(Create, self).__init__(*args, **kw)
+        super(Match, self).__init__(*args, **kw)
         self.__limit = None
         self.__skip = None
 
     def compile(self):
         if self.optional:
             self.verb = 'OPTIONAL MATCH'
-        super(Create, self).compile()
+        super(Match, self).compile()
         if self.__skip:
             self.query += ' SKIP %i' % self.__skip
         if self.__limit:
