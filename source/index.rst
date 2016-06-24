@@ -122,7 +122,7 @@ Then import ``Create``::
 
     In [2]: from neoalchemy.cypher import Create
 
-    In [3]: create = Create(users)
+    In [3]: create = Create(user)
 
 This gives you a ``Create`` object, a simple query builder. You can stringify
 it to see the underlying Cypher statement::
