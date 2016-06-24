@@ -26,6 +26,9 @@ class Property(OperatorInterface):
                                  "once set." % self.__class__.__name__)
         self.__key = str(value)
 
+    def __hash__(self):
+        return hash(self.key)
+
     def __str__(self):
         label, key = self.label, self.__key
         schema = []
