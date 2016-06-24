@@ -2,10 +2,11 @@ from collections import OrderedDict
 
 from six import add_metaclass
 
-from .cypher import Create
+from ..cypher import Create
+from .operations import OperatorInterface
 
 
-class Property(object):
+class Property(OperatorInterface):
     def __init__(self, property_key=None, type=str,
                  indexed=False, unique=False, required=False):
         self.__key = str(property_key) if property_key is not None else None
@@ -24,18 +25,6 @@ class Property(object):
             raise AttributeError("Can't change key on %s "
                                  "once set." % self.__class__.__name__)
         self.__key = str(value)
-
-    def __hash__(self):
-        return hash('::'.join((self.label, self.__key)))
-
-    def __eq__(self, other):
-        try:
-            return hash(self) == hash(other)
-        except TypeError:
-            return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
     def __str__(self):
         label, key = self.label, self.__key
@@ -83,6 +72,18 @@ class NodeType(object):
             return self.__schema[attr]
         except KeyError:
             super().__getattribute__(attr)
+
+    def __hash__(self):
+        return hash('::'.join(self.__labels))
+
+    def __eq__(self, other):
+        try:
+            return hash(self) == hash(other)
+        except TypeError:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __str__(self):
         return '\n'.join(filter(bool, map(str, self.__schema.values())))

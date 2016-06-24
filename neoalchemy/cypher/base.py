@@ -54,18 +54,40 @@ class Relation(object):
 
 
 class Create(Verb):
-    def __init__(self, *args, unique=False, **kw):
-        self.unique = bool(unique)
+    def __init__(self, *args, **kw):
+        self.unique = bool(kw.pop('unique'))
         super(Create, self).__init__(*args, **kw)
 
     def compile(self):
         if self.unique:
-            self.verb += ' UNIQUE'
+            self.verb = 'CREATE UNIQUE'
         return super(Create, self).compile()
 
 
 class Match(Verb):
-    pass
+    def __init__(self, *args, **kw):
+        self.optional = bool(kw.pop(optional))
+        super(Create, self).__init__(*args, **kw)
+        self.__limit = None
+        self.__skip = None
+
+    def compile(self):
+        if self.optional:
+            self.verb = 'OPTIONAL MATCH'
+        super(Create, self).compile()
+        if self.__skip:
+            self.query += ' SKIP %i' % self.__skip
+        if self.__limit:
+            self.query += ' LIMIT %i' % self.__limit
+        return self
+
+    def limit(self, value):
+        self.__limit = int(value)
+        return self
+
+    def skip(self, value):
+        self.__skip = int(value)
+        return self
 
 
 class Merge(Verb):
