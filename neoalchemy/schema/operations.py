@@ -52,23 +52,23 @@ class OperatorInterface(object):
         pass    # x ** self
 
     # Comparison Operators
-    def __eq__(self, x):
-        pass    # self == x
+    def __eq__(self, x):    # self == x
+        return '%%s.%s = %r' % (self.key, x)
 
-    def __ne__(self, x):
-        pass    # self != x
+    def __ne__(self, x):    # self != x
+        return '%%s.%s <> %r' % (self.key, x)
 
-    def __lt__(self, x):
-        pass    # self < x
+    def __lt__(self, x):    # self < x
+        return '%%s.%s < %r' % (self.key, x)
 
-    def __gt__(self, x):
-        pass    # self > x
+    def __gt__(self, x):    # self > x
+        return '%%s.%s > %r' % (self.key, x)
 
-    def __lte__(self, x):
-        pass    # self <= x
+    def __lte__(self, x):    # self <= x
+        return '%%s.%s <= %r' % (self.key, x)
 
-    def __gte__(self, x):
-        pass    # self >= x
+    def __gte__(self, x):    # self >= x
+        return '%%s.%s >= %r' % (self.key, x)
 
     # Logical Operators
     def __and__(self, x):

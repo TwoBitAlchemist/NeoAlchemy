@@ -1,28 +1,30 @@
-class CompileError(SyntaxError):
-    def __init__(self):
-        super(CompileError, self).__init__('Cannot compile with '
-                                           'incomplete relationships.')
 
 
 class Verb(object):
     def __init__(self, nodetype, param_id=None, **params):
         self.verb = self.__class__.__name__.upper()
-        self.nodetype = nodetype
+
+        if isinstance(nodetype, self.__class__):
+            self.nodetype = nodetype.nodetype
+        else:
+            self.nodetype = nodetype
+
         self.param_id = param_id
         self.params = {}
         for prop in self.nodetype.schema:
             param_key = '%s%s' % (prop, ('_%s' % param_id) if param_id else '')
             self.params[param_key] = params.get(prop)
+
         self.relations = []
 
     def compile(self):
         labels = ':'.join(self.nodetype.labels)
 
-        if self.params:
-            properties = ' {%s}' % ', '.join('%(p)s: {%(p)s}' % {'p':p}
-                                             for p in self.params)
-        else:
-            properties = ''
+        properties = []
+        for param_key in self.params:
+            param_name = param_key.split('_')[0]
+            properties.append('%s: {%s}' % (param_name, param_key))
+        properties = (' {%s}' % ', '.join(properties)) if properties else ''
 
         if self.param_id:
             node_key = 'node_%s' % self.param_id
@@ -30,21 +32,30 @@ class Verb(object):
             node_key = 'node'
 
         self.query = '%s (%s:%s%s)' % (self.verb, node_key, labels, properties)
+        base_verb = self.__class__.__name__.upper()
 
         for i, relation in enumerate(self.relations, start=1):
             if relation.end_node is None:
                 raise CompileError
 
-            end_node = self.__class__(relation.end_node, param_id=i)
+            if relation.end_node.param_id:
+                end_node = relation.end_node
+            else:
+                end_node = self.__class__(relation.end_node, param_id=i)
             self.params.update(end_node.params)
 
-            end_node = str(end_node).split(self.verb, 1)[1].lstrip()
-            self.query += '-[:%s]->%s' % (relation.type, end_node)
+            end_node = str(end_node).split(base_verb, 1)[1].lstrip()
+            if relation.type:
+                self.query += '-[:%s]->%s' % (relation.type, end_node)
+            else:
+                self.query += '-->%s' % end_node
 
         return self
 
-    def __call__(self, end_node):
-        self.relations[-1].end_node = end_node
+    def __call__(self, *args, **kw):
+        if not self.relations or self.relations[-1].end_node:
+            self.relations.append(Relation(None))
+        self.relations[-1].end_node = self.__class__(*args, **kw)
         return self
 
     def __getitem__(self, rel_type):
@@ -64,7 +75,7 @@ class Relation(object):
             self.end_node = rel.end_node
         else:
             self.start_node = start_node
-            self.type = type
+            self.type = type or ''
             self.end_node = end_node
 
 
@@ -81,15 +92,18 @@ class Create(Verb):
 
 class Match(Verb):
     def __init__(self, *args, **kw):
-        self.optional = bool(kw.pop(optional))
+        self.optional = bool(kw.pop('optional', None))
         super(Match, self).__init__(*args, **kw)
         self.__limit = None
         self.__skip = None
+        self.__where = ''
 
     def compile(self):
         if self.optional:
             self.verb = 'OPTIONAL MATCH'
         super(Match, self).compile()
+        if self.__where:
+            self.query += ' WHERE %s' % self.__where
         if self.__skip:
             self.query += ' SKIP %i' % self.__skip
         if self.__limit:
@@ -104,6 +118,16 @@ class Match(Verb):
         self.__skip = int(value)
         return self
 
+    def where(self, cypher_conditional, param_id=''):
+        self.__where += cypher_conditional % param_id
+        return self
+
 
 class Merge(Verb):
     pass
+
+
+class CompileError(SyntaxError):
+    def __init__(self):
+        super(CompileError, self).__init__('Cannot compile with '
+                                           'incomplete relationships.')
