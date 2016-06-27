@@ -1,3 +1,4 @@
+from neoalchemy.schema.base import NodeType
 
 
 class Verb(object):
@@ -11,9 +12,10 @@ class Verb(object):
 
         self.param_id = param_id
         self.params = {}
-        for prop in self.nodetype.schema:
-            param_key = '%s%s' % (prop, ('_%s' % param_id) if param_id else '')
-            self.params[param_key] = params.get(prop)
+        for prop_name, prop in self.nodetype.schema.items():
+            param_key = '%s%s' % (prop_name,
+                                  ('_%s' % param_id) if param_id else '')
+            self.params[param_key] = params.get(prop_name, prop.default)
 
         self.relations = []
 
@@ -34,21 +36,21 @@ class Verb(object):
         self.query = '%s (%s:%s%s)' % (self.verb, node_key, labels, properties)
         base_verb = self.__class__.__name__.upper()
 
-        for i, relation in enumerate(self.relations, start=1):
+        for i, relation in enumerate(self.relations):
             if relation.end_node is None:
                 raise CompileError
 
             if relation.end_node.param_id:
                 end_node = relation.end_node
             else:
-                end_node = self.__class__(relation.end_node, param_id=i)
+                end_node = self.__class__(relation.end_node, param_id=i+1)
             self.params.update(end_node.params)
 
             end_node = str(end_node).split(base_verb, 1)[1].lstrip()
             if relation.type:
-                self.query += '-[:%s]->%s' % (relation.type, end_node)
+                self.query += '-[r%i:%s]->%s' % (i, relation.type, end_node)
             else:
-                self.query += '-->%s' % end_node
+                self.query += '-[r%i]->%s' % (i, end_node)
 
         return self
 
@@ -58,16 +60,16 @@ class Verb(object):
         self.relations[-1].end_node = self.__class__(*args, **kw)
         return self
 
-    def __getitem__(self, rel_type):
-        self.relations.append(Relation(rel_type))
+    def __getitem__(self, rel):
+        self.relations.append(Relation(rel))
         return self
 
     def __str__(self):
         return self.compile().query
 
 
-class Relation(object):
-    def __init__(self, type, start_node=None, end_node=None):
+class Relation(NodeType):
+    def __init__(self, type, start_node=None, end_node=None, *args, **kw):
         if isinstance(type, self.__class__):
             rel = type
             self.start_node = rel.start_node
@@ -77,6 +79,7 @@ class Relation(object):
             self.start_node = start_node
             self.type = type or ''
             self.end_node = end_node
+        super(Relation, self).__init__(self.type, *args, **kw)
 
 
 class Create(Verb):

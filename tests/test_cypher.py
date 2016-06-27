@@ -45,14 +45,14 @@ def test_create_relation_to_nowhere():
 def test_create_relationship():
     user = NodeType('User')
     create = Create(user)['KNOWS'](user)
-    assert str(create) == 'CREATE (node:User)-[:KNOWS]->(node_1:User)'
+    assert str(create) == 'CREATE (node:User)-[r0:KNOWS]->(node_1:User)'
 
 
 def test_multiple_params():
     user = NodeType('User', Property('name'))
     create = Create(user)['KNOWS'](user)
     assert str(create) == ('CREATE (node:User {name: {name}})'
-                           '-[:KNOWS]->(node_1:User {name: {name_1}})')
+                           '-[r0:KNOWS]->(node_1:User {name: {name_1}})')
     assert 'name' in create.params
     assert 'name_1' in create.params
 
@@ -61,7 +61,7 @@ def test_multiple_named_params():
     user = NodeType('User', Property('name'))
     create = Create(user, 'n')['KNOWS'](user, 'm')
     assert str(create) == ('CREATE (node_n:User {name: {name_n}})'
-                           '-[:KNOWS]->(node_m:User {name: {name_m}})')
+                           '-[r0:KNOWS]->(node_m:User {name: {name_m}})')
     assert 'name_n' in create.params
     assert 'name_m' in create.params
 
@@ -71,8 +71,8 @@ def test_match_refcard_1():
     match = (Match(Person, 'n')['KNOWS'](Person, 'm')
                .where(Person.name=='Alice', 'n'))
     assert str(match) == ('MATCH (node_n:Person {name: {name_n}})'
-                           '-[:KNOWS]->(node_m:Person {name: {name_m}})'
-                           " WHERE n.name = 'Alice'")
+                          '-[r0:KNOWS]->(node_m:Person {name: {name_m}})'
+                          " WHERE n.name = 'Alice'")
     assert 'name_n' in match.params
     assert 'name_m' in match.params
 
@@ -80,14 +80,14 @@ def test_match_refcard_1():
 def test_matching_super_simple_stuff():
     Person = NodeType('Person')
     match = Match(Person, 'n')(Person, 'm')
-    assert str(match) == 'MATCH (node_n:Person)-->(node_m:Person)'
+    assert str(match) == 'MATCH (node_n:Person)-[r0]->(node_m:Person)'
     match = Match(Person, 'n')[''](Person, 'm')
-    assert str(match) == 'MATCH (node_n:Person)-->(node_m:Person)'
+    assert str(match) == 'MATCH (node_n:Person)-[r0]->(node_m:Person)'
     match = Match(Person, 'n')[None](Person, 'm')
-    assert str(match) == 'MATCH (node_n:Person)-->(node_m:Person)'
+    assert str(match) == 'MATCH (node_n:Person)-[r0]->(node_m:Person)'
 
 
 def test_optional_match():
     Person = NodeType('Person')
     match = Match(Person, 'n', optional=True)(Person, 'm')
-    assert str(match) == 'OPTIONAL MATCH (node_n:Person)-->(node_m:Person)'
+    assert str(match) == 'OPTIONAL MATCH (node_n:Person)-[r0]->(node_m:Person)'
