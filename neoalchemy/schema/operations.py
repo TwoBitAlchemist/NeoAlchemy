@@ -3,8 +3,8 @@
 class OperatorInterface(object):
 
     # Mathematical Operators
-    def __add__(self, x):
-        pass    # self + x
+    def __add__(self, x):    # self + x
+        return '%%s.%s + %r' % (self.key, x)
 
     def __radd__(self, x):
         pass    # x + self
@@ -64,10 +64,10 @@ class OperatorInterface(object):
     def __gt__(self, x):    # self > x
         return '%%s.%s > %r' % (self.key, x)
 
-    def __lte__(self, x):    # self <= x
+    def __le__(self, x):    # self <= x
         return '%%s.%s <= %r' % (self.key, x)
 
-    def __gte__(self, x):    # self >= x
+    def __ge__(self, x):    # self >= x
         return '%%s.%s >= %r' % (self.key, x)
 
     # Logical Operators
