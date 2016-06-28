@@ -6,9 +6,6 @@ class OperatorInterface(object):
     def __add__(self, x):    # self + x
         return '%%s.%s + %r' % (self.key, x)
 
-    def __radd__(self, x):
-        pass    # x + self
-
     def __sub__(self, x):
         pass    # self - x
 
