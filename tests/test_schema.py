@@ -35,8 +35,8 @@ def test_node_one_index():
 
 def test_node_one_unique():
     Person = NodeType('Person', Property('SSN', unique=True))
-    assert str(Person) == ('CREATE CONSTRAINT ON (node:Person) '
-                           'ASSERT node.SSN IS UNIQUE')
+    assert str(Person) == ('CREATE CONSTRAINT ON (n:Person) '
+                           'ASSERT n.SSN IS UNIQUE')
     assert Person.SSN.indexed
     assert Person.SSN.unique
     assert not Person.SSN.required
@@ -44,8 +44,8 @@ def test_node_one_unique():
 
 def test_node_one_required():
     Person = NodeType('Person', Property('name', required=True))
-    assert str(Person) == ('CREATE CONSTRAINT ON (node:Person) '
-                           'ASSERT exists(node.name)')
+    assert str(Person) == ('CREATE CONSTRAINT ON (n:Person) '
+                           'ASSERT exists(n.name)')
     assert not Person.name.indexed
     assert not Person.name.unique
     assert Person.name.required
@@ -54,8 +54,8 @@ def test_node_one_required():
 def test_node_one_required_and_indexed():
     Person = NodeType('Person', Property('name', required=True, indexed=True))
     assert str(Person) == ('CREATE INDEX ON :Person(name)\n'
-                           'CREATE CONSTRAINT ON (node:Person) '
-                           'ASSERT exists(node.name)')
+                           'CREATE CONSTRAINT ON (n:Person) '
+                           'ASSERT exists(n.name)')
     assert Person.name.indexed
     assert not Person.name.unique
     assert Person.name.required
@@ -63,10 +63,10 @@ def test_node_one_required_and_indexed():
 
 def test_node_one_required_and_unique():
     Person = NodeType('Person', Property('name', required=True, unique=True))
-    assert str(Person) == ('CREATE CONSTRAINT ON (node:Person) '
-                           'ASSERT node.name IS UNIQUE\n'
-                           'CREATE CONSTRAINT ON (node:Person) '
-                           'ASSERT exists(node.name)')
+    assert str(Person) == ('CREATE CONSTRAINT ON (n:Person) '
+                           'ASSERT n.name IS UNIQUE\n'
+                           'CREATE CONSTRAINT ON (n:Person) '
+                           'ASSERT exists(n.name)')
     assert Person.name.indexed
     assert Person.name.unique
     assert Person.name.required

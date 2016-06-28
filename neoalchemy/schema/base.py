@@ -28,14 +28,14 @@ class Property(OperatorInterface):
         label, key = self.label, self.__key
         schema = []
         if self.unique:
-            schema.append('CREATE CONSTRAINT ON (node:%s) '
-                          'ASSERT node.%s IS UNIQUE' % (label, key))
+            schema.append('CREATE CONSTRAINT ON (n:%s) '
+                          'ASSERT n.%s IS UNIQUE' % (label, key))
         elif self.indexed:
             schema.append('CREATE INDEX ON :%s(%s)' % (label, key))
 
         if self.required:
-            schema.append('CREATE CONSTRAINT ON (node:%s) '
-                          'ASSERT exists(node.%s)' % (label, key))
+            schema.append('CREATE CONSTRAINT ON (n:%s) '
+                          'ASSERT exists(n.%s)' % (label, key))
         return '\n'.join(schema)
 
 
