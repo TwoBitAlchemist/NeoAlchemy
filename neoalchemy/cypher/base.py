@@ -1,6 +1,23 @@
 from collections import defaultdict
+import string
 
 from neoalchemy.schema.base import NodeType
+
+
+class VerbCollection(list):
+    def __and__(self, x):
+        self.append(x)
+        return self
+
+    @property
+    def params(self):
+        params = {}
+        for x in self:
+            params.update(x.params)
+        return params
+
+    def __str__(self):
+        return '\n'.join(map(str, self))
 
 
 class Verb(object):
@@ -12,8 +29,8 @@ class Verb(object):
         else:
             self.nodetype = nodetype
 
-        self.params = {}
         self._ = defaultdict(lambda: None)
+        self._['params'] = {}
         self._['param_id'] = param_id
         self._['relations'] = list(params.get('relations', []))
         self._compile_params(**params)
@@ -31,7 +48,7 @@ class Verb(object):
             end_node._.update(self._)
             end_node._['param_id'] = param_id
             end_node._compile_params(**end_node.params)
-            self.params.update(end_node.params)
+            self._['params'].update(end_node.params)
 
             end_node = end_node._write_node()
             if relation.type:
@@ -40,12 +57,19 @@ class Verb(object):
                 self.query += '-[r%i]->%s' % (i, end_node)
 
         if self._['where']:
+            self._['where'] %= self._['nodevar']
             self.query += ' WHERE %s' % self._['where']
+
+        if self._['set']:
+            self._['set'] %= self._['nodevar']
+            self.query += ' SET %s' % self._['set']
+        if self._['remove']:
+            self.query += ' REMOVE %s' % self._['remove']
+        if self._['delete']:
+            self.query += ' DELETE %s' % self._['delete']
 
         if self._['return']:
             self.query += ' RETURN %s' % self._['return']
-        elif self._['delete']:
-            self.query += ' DELETE %s' % self._['delete']
 
         if self._['order_by']:
             self.query += ' ORDER BY %s' % self._['order_by']
@@ -58,11 +82,11 @@ class Verb(object):
 
     def _compile_params(self, **params):
         param_id = self._['param_id']
-        self.params = {}
+        self._['params'] = {}
         for prop_name, prop in self.nodetype.schema.items():
             param_key = '%s%s' % (prop_name,
                                   ('_%s' % param_id) if param_id else '')
-            self.params[param_key] = params.get(prop_name, prop.default)
+            self._['params'][param_key] = params.get(prop_name, prop.default)
         return self
 
     def _parse_args(self, args):
@@ -80,18 +104,22 @@ class Verb(object):
         labels = ':'.join(self.nodetype.labels)
 
         properties = []
-        if not self._['where']:
-            for param_key in self.params:
+        if not (self._['where'] or self._['set']):
+            for param_key in self._['params']:
                 param_name = param_key.split('_')[0]
                 properties.append('%s: {%s}' % (param_name, param_key))
         properties = ' {%s}' % ', '.join(properties) if properties else ''
 
         if self._['param_id']:
-            node_key = 'n_%s' % self._['param_id']
+            self._['nodevar'] = 'n_%s' % self._['param_id']
         else:
-            node_key = 'n'
+            self._['nodevar'] = 'n'
 
-        return '(%s:%s%s)' % (node_key, labels, properties)
+        return '(%s:%s%s)' % (self._['nodevar'], labels, properties)
+
+    def remove(self, args=()):
+        self._['remove'] = ', '.join(self._parse_args(args))
+        return self
 
     def return_(self, args=None, distinct=False):
         if not args:
@@ -101,6 +129,33 @@ class Verb(object):
         distinct = 'DISTINCT ' if distinct else ''
         self._['return'] = distinct + ', '.join(self._parse_args(args))
         return self
+
+    def set(self, struct):
+        values = []
+        for param_id, prop_value_map in struct.items():
+            for prop, value in prop_value_map.items():
+                try:
+                    property_ = self.nodetype.schema[prop]
+                except KeyError:
+                    pass
+                else:
+                    if property_.type is not None:
+                        value = property_.type(value)
+                    if value is None:
+                        value = property_.default
+                values.append('%%s.%s=%r' % (prop, value))
+
+        self._['set'] = ', '.join(values)
+        return self
+
+    def where(self, cypher_conditional, param_id=None):
+        if self._['where'] is None:
+            self._['where'] = ''
+        self._['where'] += cypher_conditional
+        return self
+
+    def __and__(self, x):
+        return VerbCollection([self]) & x
 
     def __call__(self, *args, **kw):
         if not self._['relations'] or self._['relations'][-1].end_node:
@@ -140,6 +195,14 @@ class Create(Verb):
             self.verb = 'CREATE UNIQUE'
         return super(Create, self).compile()
 
+    @property
+    def params(self):
+        return self._['params']
+
+
+class Merge(Create):
+    pass
+
 
 class Match(Verb):
     def __init__(self, *args, **kw):
@@ -149,8 +212,7 @@ class Match(Verb):
     def compile(self):
         if self.optional:
             self.verb = 'OPTIONAL MATCH'
-        super(Match, self).compile()
-        return self
+        return super(Match, self).compile()
 
     def delete(self, args, detach=False):
         detach = 'DETACH ' if detach else ''
@@ -167,20 +229,15 @@ class Match(Verb):
                                        direction))
         return self
 
+    @property
+    def params(self):
+        return {key: value
+                for key, value in dict(self._['params'] or {}).items()
+                if value is not None}
+
     def skip(self, value):
         self._['skip'] = int(value)
         return self
-
-    def where(self, cypher_conditional, param_id=None):
-        if self._['where'] is None:
-            self._['where'] = ''
-        nodevar = 'n_%s' % param_id if param_id else 'n'
-        self._['where'] += cypher_conditional % nodevar
-        return self
-
-
-class Merge(Verb):
-    pass
 
 
 class CompileError(SyntaxError):
