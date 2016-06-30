@@ -2,6 +2,7 @@ from collections import defaultdict
 import string
 
 from neoalchemy.schema.base import NodeType
+from neoalchemy.schema.operations import CypherExpressionList
 
 
 class VerbCollection(list):
@@ -33,6 +34,7 @@ class Verb(object):
         self._['params'] = {}
         self._['param_id'] = param_id
         self._['relations'] = list(params.get('relations', []))
+        self._['where'] = CypherExpressionList()
         self._compile_params(**params)
 
     def compile(self):
@@ -57,7 +59,10 @@ class Verb(object):
                 self.query += '-[r%i]->%s' % (i, end_node)
 
         if self._['where']:
-            self._['where'] %= self._['nodevar']
+            for expr in self._['where']:
+                if not isinstance(expr, str):
+                    expr.node_key = self._['nodevar']
+                    self._['params'][expr.compile().param_key] = expr.value
             self.query += ' WHERE %s' % self._['where']
 
         if self._['set']:
@@ -106,7 +111,7 @@ class Verb(object):
         properties = []
         if not (self._['where'] or self._['set']):
             for param_key in self._['params']:
-                param_name = param_key.split('_')[0]
+                param_name = '_'.join(param_key.split('_')[:-1]) or param_key
                 properties.append('%s: {%s}' % (param_name, param_key))
         properties = ' {%s}' % ', '.join(properties) if properties else ''
 
@@ -148,10 +153,17 @@ class Verb(object):
         self._['set'] = ', '.join(values)
         return self
 
-    def where(self, cypher_conditional, param_id=None):
-        if self._['where'] is None:
-            self._['where'] = ''
-        self._['where'] += cypher_conditional
+    def where(self, expr, param_id=None, or_=False):
+        expr.param_id = param_id
+        if not self._['where']:
+            self._['where'] += expr
+            return self
+
+        if or_:
+            self._['where'] |= expr
+        else:
+            self._['where'] &= expr
+
         return self
 
     def __and__(self, x):

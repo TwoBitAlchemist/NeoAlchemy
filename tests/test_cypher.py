@@ -71,9 +71,8 @@ def test_match_refcard_1():
     match = (Match(Person, 'n')['KNOWS'](Person, 'm')
                .where(Person.name=='Alice', 'n'))
     assert str(match) == ('MATCH (n_n:Person)-[r0:KNOWS]->(n_m:Person)'
-                          " WHERE n_n.name = 'Alice'")
-    assert 'name_n' in match.params
-    assert 'name_m' in match.params
+                          " WHERE n_n.name = {name_n}")
+    assert match.params == {'name_n': 'Alice'}
 
 
 def test_matching_super_simple_stuff():
