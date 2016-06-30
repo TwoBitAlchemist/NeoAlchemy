@@ -2,7 +2,7 @@ from collections import defaultdict
 import string
 
 from neoalchemy.schema.base import NodeType
-from neoalchemy.schema.operations import CypherExpressionList
+from neoalchemy.schema.operations import CypherExpression, CypherExpressionList
 
 
 class VerbCollection(list):
@@ -34,6 +34,7 @@ class Verb(object):
         self._['params'] = {}
         self._['param_id'] = param_id
         self._['relations'] = list(params.get('relations', []))
+        self._['set'] = CypherExpressionList()
         self._['where'] = CypherExpressionList()
         self._compile_params(**params)
 
@@ -66,8 +67,10 @@ class Verb(object):
             self.query += ' WHERE %s' % self._['where']
 
         if self._['set']:
-            self._['set'] %= self._['nodevar']
-            self.query += ' SET %s' % self._['set']
+            for expr in self._['set']:
+                expr.node_key = self._['nodevar']
+                self._['params'][expr.compile().param_key] = expr.value
+            self.query += ' SET %s' % ', '.join(map(str, self._['set']))
         if self._['remove']:
             self.query += ' REMOVE %s' % self._['remove']
         if self._['delete']:
@@ -135,22 +138,10 @@ class Verb(object):
         self._['return'] = distinct + ', '.join(self._parse_args(args))
         return self
 
-    def set(self, struct):
-        values = []
-        for param_id, prop_value_map in struct.items():
-            for prop, value in prop_value_map.items():
-                try:
-                    property_ = self.nodetype.schema[prop]
-                except KeyError:
-                    pass
-                else:
-                    if property_.type is not None:
-                        value = property_.type(value)
-                    if value is None:
-                        value = property_.default
-                values.append('%%s.%s=%r' % (prop, value))
-
-        self._['set'] = ', '.join(values)
+    def set(self, property_, value, param_id=None):
+        expr = CypherExpression('=', value, param_key=property_.key)
+        expr.param_id = param_id
+        self._['set'] += expr
         return self
 
     def where(self, expr, param_id=None, or_=False):
