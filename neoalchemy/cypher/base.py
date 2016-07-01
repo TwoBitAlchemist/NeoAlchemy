@@ -1,6 +1,8 @@
 from collections import defaultdict
 import string
 
+import six
+
 from neoalchemy.schema.base import NodeType
 from neoalchemy.schema.operations import CypherExpression, CypherExpressionList
 
@@ -107,8 +109,11 @@ class Verb(object):
             except TypeError:
                 yield nodevar
             else:
-                for prop in properties:
-                    yield '%s.%s' % (nodevar, prop)
+                if isinstance(properties, six.string_types):
+                    yield '%s.%s' % (nodevar, properties)
+                else:
+                    for prop in properties:
+                        yield '%s.%s' % (nodevar, prop)
 
     def _write_node(self):
         labels = ':'.join(self.nodetype.labels)
