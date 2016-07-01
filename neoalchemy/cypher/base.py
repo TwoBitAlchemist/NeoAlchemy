@@ -22,7 +22,7 @@ class VerbCollection(list):
 
 
 class Verb(object):
-    def __init__(self, nodetype, param_id=None, **params):
+    def __init__(self, nodetype, param_id='n', **params):
         self.verb = self.__class__.__name__.upper()
 
         if isinstance(nodetype, self.__class__):
@@ -42,12 +42,14 @@ class Verb(object):
         self.query = '%s %s' % (self.verb, self._write_node())
         base_verb = self.__class__.__name__.upper()
 
-        for i, relation in enumerate(self._['relations']):
+        for i, relation in enumerate(self._['relations'], start=1):
             if relation.end_node is None:
                 raise CompileError
 
             end_node = relation.end_node
-            param_id = end_node._['param_id'] or (i + 1)
+            param_id = end_node._['param_id']
+            if param_id == 'n':
+                param_id += str(i)
             end_node._.update(self._)
             end_node._['param_id'] = param_id
             end_node._compile_params(**end_node.params)
@@ -99,7 +101,7 @@ class Verb(object):
 
     def _parse_args(self, args):
         for param_id in args:
-            nodevar = 'n' if param_id is None else 'n_%s' % param_id
+            nodevar = param_id or 'n'
             try:
                 properties = args[param_id]
             except TypeError:
@@ -118,12 +120,7 @@ class Verb(object):
                 properties.append('%s: {%s}' % (param_name, param_key))
         properties = ' {%s}' % ', '.join(properties) if properties else ''
 
-        if self._['param_id']:
-            self._['nodevar'] = 'n_%s' % self._['param_id']
-        else:
-            self._['nodevar'] = 'n'
-
-        return '(%s:%s%s)' % (self._['nodevar'], labels, properties)
+        return '(%s:%s%s)' % (self._['param_id'], labels, properties)
 
     def remove(self, args=()):
         self._['remove'] = ', '.join(self._parse_args(args))
