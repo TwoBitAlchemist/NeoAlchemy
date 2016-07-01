@@ -4,9 +4,9 @@ from .operations import OperatorInterface
 
 
 class Property(OperatorInterface):
-    def __init__(self, property_key=None, type=str, default=None,
+    def __init__(self, name=None, type=str, default=None,
                  indexed=False, unique=False, required=False):
-        self.__key = str(property_key) if property_key is not None else None
+        self.__name = name or str(name)
         self.unique = bool(unique)
         self.indexed = self.unique or bool(indexed)
         self.required = bool(required)
@@ -14,28 +14,27 @@ class Property(OperatorInterface):
         self.default = default
 
     @property
-    def key(self):
-        return self.__key
+    def name(self):
+        return self.__name
 
-    @key.setter
-    def key(self, value):
-        if self.__key is not None:
-            raise AttributeError("Can't change key on %s "
-                                 "once set." % self.__class__.__name__)
-        self.__key = str(value)
+    @name.setter
+    def name(self, value):
+        if self.__name is not None:
+            raise AttributeError("Can't change Property name once set.")
+        self.__name = str(value)
 
     def __str__(self):
-        label, key = self.label, self.__key
+        label, name = self.label, self.__name
         schema = []
         if self.unique:
             schema.append('CREATE CONSTRAINT ON (n:%s) '
-                          'ASSERT n.%s IS UNIQUE' % (label, key))
+                          'ASSERT n.%s IS UNIQUE' % (label, name))
         elif self.indexed:
-            schema.append('CREATE INDEX ON :%s(%s)' % (label, key))
+            schema.append('CREATE INDEX ON :%s(%s)' % (label, name))
 
         if self.required:
             schema.append('CREATE CONSTRAINT ON (n:%s) '
-                          'ASSERT exists(n.%s)' % (label, key))
+                          'ASSERT exists(n.%s)' % (label, name))
         return '\n'.join(schema)
 
 
@@ -48,10 +47,10 @@ class NodeType(object):
                 raise TypeError("Must be a Property object. "
                                 "'%s' given." % prop.__class__)
             prop.label = label
-            if prop.key in self.__schema:
-                raise ValueError("Duplicate property found: '%s'" % prop.key)
+            if prop.name in self.__schema:
+                raise ValueError("Duplicate property found: '%s'" % prop.name)
 
-            self.__schema[prop.key] = prop
+            self.__schema[prop.name] = prop
 
     @property
     def LABEL(self):

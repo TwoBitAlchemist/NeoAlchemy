@@ -63,17 +63,18 @@ class Verb(object):
             else:
                 self.query += '-[r%i]->%s' % (i, end_node)
 
+        param_count = 0
         if self._['where']:
             for expr in self._['where']:
                 if not isinstance(expr, str):
-                    expr.node_key = self._['nodevar']
-                    self._['params'][expr.compile().param_key] = expr.value
+                    expr.node_key = self._['param_id']
+                    self._['params'][expr.param_key] = expr.value
             self.query += ' WHERE %s' % self._['where']
 
         if self._['set']:
             for expr in self._['set']:
-                expr.node_key = self._['nodevar']
-                self._['params'][expr.compile().param_key] = expr.value
+                expr.node_key = self._['param_id']
+                self._['params'][expr.param_key] = expr.value
             self.query += ' SET %s' % ', '.join(map(str, self._['set']))
         if self._['remove']:
             self.query += ' REMOVE %s' % self._['remove']
@@ -141,7 +142,7 @@ class Verb(object):
         return self
 
     def set(self, property_, value, param_id=None):
-        expr = CypherExpression('=', value, param_key=property_.key)
+        expr = CypherExpression('=', value, property_name=property_.name)
         expr.param_id = param_id
         self._['set'] += expr
         return self

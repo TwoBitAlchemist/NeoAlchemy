@@ -94,57 +94,59 @@ def test_optional_match():
 def test_logical_cypher_expressions():
     Person = NodeType('Person', Property('name'))
     match = Match(Person).where(Person.name=='Alice')
-    assert str(match) == 'MATCH (n:Person) WHERE n.name = {name}'
-    assert match.params['name'] == 'Alice'
+    assert str(match) == 'MATCH (n:Person) WHERE n.name = {name_n}'
+    assert match.params['name_n'] == 'Alice'
     match = Match(Person).where(Person.name!='Alice')
-    assert str(match) == 'MATCH (n:Person) WHERE n.name <> {name}'
-    assert match.params['name'] == 'Alice'
+    assert str(match) == 'MATCH (n:Person) WHERE n.name <> {name_n}'
+    assert match.params['name_n'] == 'Alice'
     match = Match(Person).where(Person.name>='Alice')
-    assert str(match) == 'MATCH (n:Person) WHERE n.name >= {name}'
-    assert match.params['name'] == 'Alice'
+    assert str(match) == 'MATCH (n:Person) WHERE n.name >= {name_n}'
+    assert match.params['name_n'] == 'Alice'
     match = Match(Person).where(Person.name<='Alice')
-    assert str(match) == 'MATCH (n:Person) WHERE n.name <= {name}'
-    assert match.params['name'] == 'Alice'
+    assert str(match) == 'MATCH (n:Person) WHERE n.name <= {name_n}'
+    assert match.params['name_n'] == 'Alice'
     match = Match(Person).where(Person.name<'Alice')
-    assert str(match) == 'MATCH (n:Person) WHERE n.name < {name}'
-    assert match.params['name'] == 'Alice'
+    assert str(match) == 'MATCH (n:Person) WHERE n.name < {name_n}'
+    assert match.params['name_n'] == 'Alice'
     match = Match(Person).where(Person.name>'Alice')
-    assert str(match) == 'MATCH (n:Person) WHERE n.name > {name}'
-    assert match.params['name'] == 'Alice'
+    assert str(match) == 'MATCH (n:Person) WHERE n.name > {name_n}'
+    assert match.params['name_n'] == 'Alice'
 
 
 def test_complex_logical_cypher_expressions():
     Person = NodeType('Person', Property('name'), Property('hair_color'))
-    expected_match = ('MATCH (n:Person) WHERE n.name = {name} '
-                      'AND n.hair_color = {hair_color}')
+    expected_match = ('MATCH (n:Person) WHERE n.name = {name_n} '
+                      'AND n.hair_color = {hair_color_n}')
 
     match = (Match(Person)
                 .where(Person.name=='Alice')
                 .where(Person.hair_color=='red'))
     assert str(match) == expected_match
-    assert match.params == {'name': 'Alice', 'hair_color': 'red'}
+    assert match.params == {'name_n': 'Alice', 'hair_color_n': 'red'}
 
     match = (Match(Person)
                 .where((Person.name=='Alice') & (Person.hair_color=='red')))
     assert str(match) == expected_match
-    assert match.params == {'name': 'Alice', 'hair_color': 'red'}
+    assert match.params == {'name_n': 'Alice', 'hair_color_n': 'red'}
 
     Person = NodeType('Person', Property('name'), Property('hair_color'),
                       Property('age'))
-    expected_match += ' AND n.age = {age}'
+    expected_match += ' AND n.age = {age_n}'
     match = (Match(Person)
                 .where((Person.name=='Alice') &
                        (Person.hair_color=='red') &
                        (Person.age==29)))
     assert str(match) == expected_match
-    assert match.params == {'name': 'Alice', 'hair_color': 'red', 'age': 29}
+    assert match.params == {'name_n': 'Alice', 'hair_color_n': 'red',
+                            'age_n': 29}
 
     match = (Match(Person)
                 .where(Person.name=='Alice')
                 .where(Person.hair_color=='red')
                 .where(Person.age==29))
     assert str(match) == expected_match
-    assert match.params == {'name': 'Alice', 'hair_color': 'red', 'age': 29}
+    assert match.params == {'name_n': 'Alice', 'hair_color_n': 'red',
+                            'age_n': 29}
 
     expected_match = 'OR'.join(expected_match.rsplit('AND', 1))
     match = (Match(Person)
@@ -152,14 +154,16 @@ def test_complex_logical_cypher_expressions():
                        (Person.hair_color=='red') |
                        (Person.age==29)))
     assert str(match) == expected_match
-    assert match.params == {'name': 'Alice', 'hair_color': 'red', 'age': 29}
+    assert match.params == {'name_n': 'Alice', 'hair_color_n': 'red',
+                            'age_n': 29}
 
     match = (Match(Person)
                 .where(Person.name=='Alice')
                 .where(Person.hair_color=='red')
                 .where(Person.age==29, or_=True))
     assert str(match) == expected_match
-    assert match.params == {'name': 'Alice', 'hair_color': 'red', 'age': 29}
+    assert match.params == {'name_n': 'Alice', 'hair_color_n': 'red',
+                            'age_n': 29}
 
 
 @pytest.mark.xfail

@@ -21,7 +21,7 @@ class PropertyDescriptor(object):
         value = self.__property.type(value)
         if (self.__property.value is not None and
                 self.__property.value != value):
-            obj.__changed__[self.__property.key] = value
+            obj.__changed__[self.__property.name] = value
         self.__property.value = value
 
     def __delete__(self, obj):
@@ -40,8 +40,8 @@ class NodeMeta(type):
         properties = []
         for prop_name, prop in attrs.items():
             if isinstance(prop, Property):
-                if prop.key is None:
-                    prop.key = prop_name
+                if prop.name is None:
+                    prop.name = prop_name
                 properties.append(prop)
                 attrs[prop_name] = PropertyDescriptor(prop)
 
