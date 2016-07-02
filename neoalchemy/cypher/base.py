@@ -67,15 +67,24 @@ class Verb(object):
         if self._['where']:
             for expr in self._['where']:
                 if not isinstance(expr, str):
-                    expr.node_key = self._['param_id']
+                    if expr.node_key is None:
+                        expr.node_key = self._['param_id']
+                    if expr.param_key is None:
+                        expr.param_key = 'param%i' % param_count
+                        param_count += 1
                     self._['params'][expr.param_key] = expr.value
             self.query += ' WHERE %s' % self._['where']
 
         if self._['set']:
             for expr in self._['set']:
-                expr.node_key = self._['param_id']
+                if expr.node_key is None:
+                    expr.node_key = self._['param_id']
+                if expr.param_key is None:
+                    expr.param_key = 'param%i' % param_count
+                    param_count += 1
                 self._['params'][expr.param_key] = expr.value
             self.query += ' SET %s' % ', '.join(map(str, self._['set']))
+
         if self._['remove']:
             self.query += ' REMOVE %s' % self._['remove']
         if self._['delete']:

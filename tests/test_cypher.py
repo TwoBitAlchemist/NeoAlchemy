@@ -166,9 +166,47 @@ def test_complex_logical_cypher_expressions():
                             'age_n': 29}
 
 
-@pytest.mark.xfail
 def test_arithmetic_cypher_expressions():
     Person = NodeType('Person', Property('age'))
+
     match = Match(Person).where((Person.age + 5) == 23)
     assert str(match) == 'MATCH (n:Person) WHERE n.age + {param0} = {param1}'
     assert match.params == {'param0': 5, 'param1': 23}
+    match = Match(Person).where((5 + Person.age) == 23)
+    assert str(match) == 'MATCH (n:Person) WHERE n.age + {param0} = {param1}'
+    assert match.params == {'param0': 5, 'param1': 23}
+
+    match = Match(Person).where((Person.age - 4) == 13)
+    assert str(match) == 'MATCH (n:Person) WHERE n.age - {param0} = {param1}'
+    assert match.params == {'param0': 4, 'param1': 13}
+    match = Match(Person).where((4 - Person.age) == 13)
+    assert str(match) == 'MATCH (n:Person) WHERE {param0} - n.age = {param1}'
+    assert match.params == {'param0': 4, 'param1': 13}
+
+    match = Match(Person).where((Person.age * 5) == 23)
+    assert str(match) == 'MATCH (n:Person) WHERE n.age * {param0} = {param1}'
+    assert match.params == {'param0': 5, 'param1': 23}
+    match = Match(Person).where((5 * Person.age) == 23)
+    assert str(match) == 'MATCH (n:Person) WHERE n.age * {param0} = {param1}'
+    assert match.params == {'param0': 5, 'param1': 23}
+
+    match = Match(Person).where((Person.age / 4) == 13)
+    assert str(match) == 'MATCH (n:Person) WHERE n.age / {param0} = {param1}'
+    assert match.params == {'param0': 4, 'param1': 13}
+    match = Match(Person).where((4 / Person.age) == 13)
+    assert str(match) == 'MATCH (n:Person) WHERE {param0} / n.age = {param1}'
+    assert match.params == {'param0': 4, 'param1': 13}
+
+    match = Match(Person).where((Person.age % 4) == 13)
+    assert str(match) == 'MATCH (n:Person) WHERE n.age % {param0} = {param1}'
+    assert match.params == {'param0': 4, 'param1': 13}
+    match = Match(Person).where((4 % Person.age) == 13)
+    assert str(match) == 'MATCH (n:Person) WHERE {param0} % n.age = {param1}'
+    assert match.params == {'param0': 4, 'param1': 13}
+
+    match = Match(Person).where((Person.age ** 4) == 13)
+    assert str(match) == 'MATCH (n:Person) WHERE n.age ^ {param0} = {param1}'
+    assert match.params == {'param0': 4, 'param1': 13}
+    match = Match(Person).where((4 ** Person.age) == 13)
+    assert str(match) == 'MATCH (n:Person) WHERE {param0} ^ n.age = {param1}'
+    assert match.params == {'param0': 4, 'param1': 13}
