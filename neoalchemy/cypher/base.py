@@ -4,7 +4,8 @@ import string
 import six
 
 from neoalchemy.schema.base import NodeType
-from neoalchemy.schema.operations import CypherExpression, CypherExpressionList
+from neoalchemy.schema.operations import (CypherExpressionList,
+                                          LogicalCypherExpression)
 
 
 class VerbCollection(list):
@@ -151,7 +152,8 @@ class Verb(object):
         return self
 
     def set(self, property_, value, param_id=None):
-        expr = CypherExpression('=', value, property_name=property_.name)
+        expr = LogicalCypherExpression('=', value,
+                                       property_name=property_.name)
         expr.param_id = param_id
         self._['set'] += expr
         return self

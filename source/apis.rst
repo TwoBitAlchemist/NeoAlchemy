@@ -12,26 +12,21 @@ Getting to Know NeoAlchemy
 
 NeoAlchemy features both a low-level and a high-level API for working with
 Neo4J. The low-level API aims to be **expressive**, offering the user
-**flexibility** and **control**. Using the low-level API can feel somewhat
-like writing Cypher, and the framework tries to stay out of your way as much as
-possible. The high-level API is built on top of the low-level API, and trades
-control for **automation**. Using the high-level API, you can lay out your
-graph schema using a hierarchy of normal Python classes. These classes offer
-convenient methods for interacting with the graph without having to manually
-write queries.
+**flexibility** and **control**.  The high-level API is built on top of the
+low-level API, and trades control for **automation**.
 
-.. note::
-    You don't have to choose between APIs! The low-level and high-level APIs
-    can be used in conjunction with one another as well as with manual Cypher
-    querying through the Graph object.
+You don't have to choose between APIs! The low-level and high-level APIs can be
+used in conjunction with one another as well as with manual Cypher querying
+through the Graph object.
 
 
-The Lower-Level API
+The Low-Level API
 -------------------
 
-The lower-level NeoAlchemy API is somewhat akin to the `SqlAlchemy Expression
-Language`_. Just like with SqlAlchemy, we start by defining our schema and
-creating the appropriate metadata::
+NeoAlchemy's low-level API is called QueryBuilder. It is similar in feel and
+in purpose to the `SqlAlchemy Expression Language`_. In SqlAlchemy, defining
+the schema for a table and writing its metadata to the database looks like
+this::
 
     from sqlalchemy import Table, Column, Integer, String, MetaData
 
@@ -59,7 +54,7 @@ The same thing in NeoAlchemy looks like this::
 
     user = NodeType('User',  # primary label
         Property('id', unique=True, type=int),
-        Property('name', indexed=True)
+        Property('name', indexed=True),
         Property('fullname', required=True)
     )
 
@@ -76,11 +71,12 @@ proper indexes and constraints are created when ``graph.schema.add`` is called.
     which is only supported in the `Neo4J Enterprise Edition`_.
 
 
-The Higher-Level API
+The High-Level API
 -------------------
 
-The higher-level API is like `SqlAlchemy's Declarative ORM`_. Python classes
-are used to map metadata to the database transparently::
+NeoAlchemy's high-level API is functionally an ORM. Python classes are used to
+map metadata to the database transparently. It is compared below to
+`SqlAlchemy's Declarative ORM`_::
 
     from sqlalchemy import Column, Integer, String
     from sqlalchemy.ext.declarative import declarative_base
@@ -113,11 +109,14 @@ The same thing in NeoAlchemy looks like this::
     # No user action required
 
 Notice that unlike SqlAlchemy, we have far less to import and we do not need
-to manually trigger metadata creation. Since every class is connected to a
-graph explicitly via its ``.graph`` property, users running multiple instances
-of Neo4J should have no trouble distinguishing which classes map to which
-graphs, even if multiple classes touching different graphs are grouped in the
-same file.
+to manually trigger metadata creation. We also don't have to explicitly
+specify a primary label for our underlying ``NodeType``. NeoAlchemy uses the
+name of the class if none is specified.
+
+Since every class is connected to a graph explicitly via its ``.graph``
+property, users running multiple instances of Neo4J should have no trouble
+distinguishing which classes map to which graphs, even if multiple classes
+touching different graphs are grouped in the same file.
 
 
 .. _SqlAlchemy Expression Language: http://docs.sqlalchemy.org/en/latest/core/tutorial.html
