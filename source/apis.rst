@@ -1,7 +1,8 @@
 
 
+**************************
 Getting to Know NeoAlchemy
-==========================
+**************************
 
 .. note::
     Got a graph full of data already? Don't worry! NeoAlchemy fully supports
@@ -20,8 +21,9 @@ used in conjunction with one another as well as with manual Cypher querying
 through the Graph object.
 
 
+=================
 The Low-Level API
--------------------
+=================
 
 NeoAlchemy's low-level API is called QueryBuilder. It is similar in feel and
 in purpose to the `SqlAlchemy Expression Language`_. In SqlAlchemy, defining
@@ -71,8 +73,9 @@ proper indexes and constraints are created when ``graph.schema.add`` is called.
     which is only supported in the `Neo4J Enterprise Edition`_.
 
 
+==================
 The High-Level API
--------------------
+==================
 
 NeoAlchemy's high-level API is functionally an ORM. Python classes are used to
 map metadata to the database transparently. It is compared below to

@@ -1,5 +1,6 @@
+##########
 NeoAlchemy
-==========
+##########
 
 NeoAlchemy is a SqlAlchemy-like tool for working with the Neo4J graph database
 in Python. It is intended to be very easy to use, and intuitively familiar to

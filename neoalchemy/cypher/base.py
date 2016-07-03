@@ -113,6 +113,9 @@ class Verb(object):
         return self
 
     def _parse_args(self, args):
+        if isinstance(args, six.string_types):
+            yield args
+            return
         for param_id in args:
             nodevar = param_id or 'n'
             try:

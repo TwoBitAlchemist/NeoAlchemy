@@ -1,7 +1,8 @@
 
 
+********************
 The QueryBuilder API
-====================
+********************
 
 The QueryBuilder API allows you to express familiar Cypher queries using normal
 Python objects and operators. To demonstrate it, we will use a simple
@@ -17,8 +18,9 @@ this one ``Person`` and give it a few simple characteristics::
     )
 
 
+======
 Create
-------
+======
 
 NeoAlchemy features several classes which correspond to `familiar Cypher
 verbs`_. These are located in the ``neoalchemy.cypher`` module::
@@ -76,5 +78,43 @@ Once you're satisfied with your settings, you can write it to the graph using
     about what the ``Graph`` class can do a little later.
 
 
+=====
+Match
+=====
+
+Now that we've experimented a bit with writing to the database, let's take a
+look at how to read data from it::
+
+    from neoalchemy.cypher import Match
+
+Match has a very similar interface to Create. For a simple use case, we get
+almost identical results::
+
+    >>> match = Match(Person)
+    >>> print(match)
+    MATCH (n:Person {hair_color: {hair_color_n}, name: {name_n}, age: {age_n}})
+
+...but this isn't a very interesting ``MATCH`` statement. For one thing, it's
+not a full query yet. In order to make this useful, at a minimum we need to
+return something::
+
+    >>> print(match.return_())
+    MATCH (n:Person {hair_color: {hair_color_n}, name: {name_n}, age: {age_n}}) RETURN *
+
+.. note::
+    Notice the function is **return_**, not **return**. The latter would cause
+    a syntax error since ``return`` is a Python reserved word.
+
+------
+Return
+------
+
+If you call ``return_`` with no arguments, the resulting query will ``RETURN *``,
+returning everything you have matched. `For performance reasons`_, however,
+this is often not the best choice. There are several ways to return only what you
+need instead of everything you've touched.
+
+
 .. _familiar Cypher verbs: https://neo4j.com/docs/developer-manual/current/#query-create
 .. _Neo4J StatementResult: https://neo4j.com/docs/api/python-driver/current/#neo4j.v1.StatementResult
+.. _For performance reasons: https://neo4j.com/docs/developer-manual/current/#query-tuning

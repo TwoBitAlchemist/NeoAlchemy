@@ -1,10 +1,12 @@
 
 
+************
 Introduction
-============
+************
 
+===============
 Getting Started
----------------
+===============
 
 NeoAlchemy is available on `PyPI`_, so it can be installed normally using ``pip
 install neoalchemy``. NeoAlchemy is built on top of the `official Neo4J Python
@@ -15,8 +17,9 @@ automatically be installed alongside it.
 directed to GitHub accordingly.
 
 
+=====================
 Connecting to a Graph
----------------------
+=====================
 
 Connecting to a graph is designed to be easy and as painless as possible. In
 general, you only have to specify what you have changed from the default
