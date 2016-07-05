@@ -19,37 +19,35 @@ this will automatically be installed alongside it.
 [Questions, support requests, comments][3], and [contributions][4] should be
 directed to GitHub accordingly.
 
+### Low-Level QueryBuilder API ###
 
-Connecting to a Graph
----------------------
-
-Connecting to a graph is designed to be easy and as painless as possible. In
-general, you only have to specify what you have changed from the default
-Neo4J settings, and NeoAlchemy will infer the rest.
-
-For example, if you connect to your graph with the username and password
-`neo4j` at the default port (7474) on `localhost`, connecting to a graph is
-as simple as:
-
-    from neoalchemy import Graph
+    from neoalchemy import NodeType, Property, Graph
 
     graph = Graph()
 
+    user = NodeType('User',  # primary label
+        Property('id', unique=True, type=int),
+        Property('name', indexed=True),
+        Property('fullname', required=True)
+    )
 
-On the other hand, if you'd changed your Neo4J password to `password`, you
-could connect like this:
+    # Emit schema-generating DDL
+    graph.schema.add(user)
 
-    graph = Graph(password='password')
 
-Of course, you can have a completely custom setup if you like. Just pass a URL
-and the Graph class will parse it for you:
+### High-Level Schema ORM ###
 
-    graph = Graph('bolt://my_user:my_pass@my.neo4j.server.com:24789')
+    from neoalchemy import Node, Property, Graph
 
-You can also pass the username and password in separately if you like:
+    class User(Node):
+        graph = Graph()
 
-    graph = Graph('bolt://my.neo4j.server.com:24789',
-                  user='my_user', password='password')
+        id = Property(unique=True, type=int)
+        name = Property(indexed=True)
+        fullname = Property(required=True)
+
+    # Cypher schema generation emitted automatically
+    # No user action required
 
 
 [1]: https://pypi.python.org/pypi
