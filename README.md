@@ -19,7 +19,8 @@ this will automatically be installed alongside it.
 [Questions, support requests, comments][3], and [contributions][4] should be
 directed to GitHub accordingly.
 
-### Low-Level QueryBuilder API ###
+Low-Level QueryBuilder API
+--------------------------
 
     from neoalchemy import NodeType, Property, Graph
 
@@ -35,7 +36,8 @@ directed to GitHub accordingly.
     graph.schema.add(user)
 
 
-### High-Level Schema ORM ###
+High-Level Schema ORM
+---------------------
 
     from neoalchemy import Node, Property, Graph
 
