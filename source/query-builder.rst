@@ -109,12 +109,53 @@ return something::
 Return
 ------
 
-If you call ``return_`` with no arguments, the resulting query will ``RETURN *``,
-returning everything you have matched. `For performance reasons`_, however,
-this is often not the best choice. There are several ways to return only what you
-need instead of everything you've touched.
+If you call ``return_`` with no arguments, the resulting query will
+``RETURN *``, returning everything you have matched. `For performance
+reasons`_, however, this is often not the best choice. There are several ways
+to return only what you need instead of everything you've touched.
 
+
+============================  ==========================================  ========================
+ What to Return                NeoAlchemy                                  Cypher Equivalent
+============================  ==========================================  ========================
+ One node                      ``return_('node')``                         ``RETURN node``
+ Many nodes                    ``return_(['n', 'm'])``                     ``RETURN n, m``
+ One property                  ``return_({'n': 'name'})``                  ``RETURN n.name``
+ Many properties               ``return_({'n': ['x', 'y']})``              ``RETURN n.x, n.y``
+ Nodes with properties         ``return_({'m': 'x', 'n': 'y'})``           ``RETURN m.x, n.y``
+ Nodes with many properties    ``return_({'m': 'x', 'n': ['y', 'z']})``    ``RETURN m.x, n.y, n.z``
+============================  ==========================================  ========================
+
+.. note::
+    The ``.remove()`` and ``.delete()`` methods work the same way. They
+    correspond to Cypher's `REMOVE`_ and `DELETE`_.
+
+-----
+Where
+-----
+
+As with ``set``, the ``where`` method can be used to set parameters one at a
+time::
+
+    match = Match(Person).where(Person.name=='Ali')
+
+The first argument to ``where`` is a ``CypherExpression`` object, which is
+automatically created when you perform the corresponding Python comparison
+using one of the NodeType's Properties.
+
+=======================  =============================  =======================
+ Comparison Type          NeoAlchemy CypherExpression    Cypher Equivalent
+=======================  =============================  =======================
+ Equal to                 ``Person.name == 'Ali'``       ``n.name = 'Ali'``
+ Not equal to             ``Person.name != 'Ali'``       ``n.name <> 'Ali'``
+ Greater than             ``Person.age > 29``            ``n.age > 29``
+ Greater than or equal    ``Person.age >= 29``           ``n.age >= 29``
+ Lesser than              ``Person.age < 29``            ``n.age < 29``
+ Lesser than or equal     ``Person.age <= 29``           ``n.age <= 29``
+=======================  =============================  =======================
 
 .. _familiar Cypher verbs: https://neo4j.com/docs/developer-manual/current/#query-create
 .. _Neo4J StatementResult: https://neo4j.com/docs/api/python-driver/current/#neo4j.v1.StatementResult
 .. _For performance reasons: https://neo4j.com/docs/developer-manual/current/#query-tuning
+.. _REMOVE: https://neo4j.com/docs/developer-manual/current/#query-remove
+.. _DELETE: https://neo4j.com/docs/developer-manual/current/#query-delete

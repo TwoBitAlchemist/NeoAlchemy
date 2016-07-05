@@ -26,7 +26,7 @@ The Low-Level API
 =================
 
 NeoAlchemy's low-level API is called QueryBuilder. It is similar in feel and
-in purpose to the `SqlAlchemy Expression Language`_. In SqlAlchemy, defining
+purpose to the `SqlAlchemy Expression Language`_. In SqlAlchemy, defining
 the schema for a table and writing its metadata to the database looks like
 this::
 
@@ -116,10 +116,11 @@ to manually trigger metadata creation. We also don't have to explicitly
 specify a primary label for our underlying ``NodeType``. NeoAlchemy uses the
 name of the class if none is specified.
 
-Since every class is connected to a graph explicitly via its ``.graph``
-property, users running multiple instances of Neo4J should have no trouble
-distinguishing which classes map to which graphs, even if multiple classes
-touching different graphs are grouped in the same file.
+.. note::
+    Since every class is connected to a graph explicitly via its ``.graph``
+    property, users running multiple instances of Neo4J should have no trouble
+    distinguishing which classes map to which graphs, even if multiple classes
+    touching different graphs are grouped in the same file.
 
 
 .. _SqlAlchemy Expression Language: http://docs.sqlalchemy.org/en/latest/core/tutorial.html

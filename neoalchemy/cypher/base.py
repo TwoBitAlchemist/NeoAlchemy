@@ -67,7 +67,7 @@ class Verb(object):
         param_count = 0
         if self._['where']:
             for expr in self._['where']:
-                if not isinstance(expr, str):
+                if not isinstance(expr, six.string_types):
                     if expr.node_key is None:
                         expr.node_key = self._['param_id']
                     if expr.param_key is None:
