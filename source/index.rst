@@ -6,8 +6,8 @@ NeoAlchemy is a SqlAlchemy-like tool for working with the Neo4J graph database
 in Python. It is intended to be very easy to use, and intuitively familiar to
 anyone who has used SqlAlchemy and/or the Cypher Query Language.
 
-NeoAlchemy is built on top of the Neo4J Bolt driver and currently only supports
-Neo4J 3.0+ connected over the Bolt protocol. It supports Python 2.7 and 3.3+.
+NeoAlchemy is built on top of the Neo4J Bolt driver and only supports Neo4J
+3.0+ connected over the Bolt protocol. It supports Python 2.7 and 3.3+.
 
 If you don't have Neo4J installed, `do that first`_. Make sure to install
 version 3.0 or higher! If you don't have an environment set up, consider
