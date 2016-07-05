@@ -22,34 +22,38 @@ directed to GitHub accordingly.
 Low-Level QueryBuilder API
 --------------------------
 
-    from neoalchemy import NodeType, Property, Graph
+``` python
+from neoalchemy import NodeType, Property, Graph
 
-    graph = Graph()
+graph = Graph()
 
-    user = NodeType('User',  # primary label
-        Property('id', unique=True, type=int),
-        Property('name', indexed=True),
-        Property('fullname', required=True)
-    )
+user = NodeType('User',  # primary label
+    Property('id', unique=True, type=int),
+    Property('name', indexed=True),
+    Property('fullname', required=True)
+)
 
-    # Emit schema-generating DDL
-    graph.schema.add(user)
+# Emit schema-generating DDL
+graph.schema.add(user)
+```
 
 
 High-Level Schema ORM
 ---------------------
 
-    from neoalchemy import Node, Property, Graph
+``` python
+from neoalchemy import Node, Property, Graph
 
-    class User(Node):
-        graph = Graph()
+class User(Node):
+    graph = Graph()
 
-        id = Property(unique=True, type=int)
-        name = Property(indexed=True)
-        fullname = Property(required=True)
+    id = Property(unique=True, type=int)
+    name = Property(indexed=True)
+    fullname = Property(required=True)
 
-    # Cypher schema generation emitted automatically
-    # No user action required
+# Cypher schema generation emitted automatically
+# No user action required
+```
 
 
 [1]: https://pypi.python.org/pypi
