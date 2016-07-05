@@ -77,7 +77,7 @@ proper indexes and constraints are created when ``graph.schema.add`` is called.
 The High-Level API
 ==================
 
-NeoAlchemy's high-level API is functionally an ORM. Python classes are used to
+NeoAlchemy's high-level API is the Schema ORM. Python classes are used to
 map metadata to the database transparently. It is compared below to
 `SqlAlchemy's Declarative ORM`_::
 
