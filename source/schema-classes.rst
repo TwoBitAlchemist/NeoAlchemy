@@ -4,36 +4,6 @@
 Schema Classes
 **************
 
-.. py:class:: Graph
-
-    .. py:method:: delete_all
-
-        Issues ``MATCH (all) DETACH DELETE all``, completely clearing the
-        graph.
-
-        It should go without saying that **this will delete all of your data!**
-
-    .. py:attribute:: query(query, **params)
-
-        Run an arbitrary query against the graph, with optional parameters.
-
-        When not called, returns a reference to the Graph's :py:class:`Query`
-        object.
-
-    :param query: An object that stringifies to a Cypher query.
-    :param params: The values for the query's parameters.
-    :return: A Neo4J StatementResult corresponding to the issued query.
-    :rtype: `neo4j.v1.StatementResult`_
-
-    .. py:attribute:: schema
-
-        A reference to the Graph's :py:class:`Schema` object.
-
-    .. py:method:: session
-
-        Returns `a session from the underlying driver`_'s pool.
-
-
 .. py:class:: NodeType(label, *properties, extra_labels=())
 
     The core of the low-level QueryBuilder API. Represents a group of nodes
@@ -69,22 +39,58 @@ Schema Classes
                           the property. Only available with Neo4J Enterprise.
 
 
-.. py:class:: Query
+.. py:class:: Graph
 
-    .. py:method:: all
+    .. py:method:: delete_all
+
+        Issues ``MATCH (all) DETACH DELETE all``, completely clearing the
+        graph.
+
+        It should go without saying that **this will delete all of your data!**
+
+    .. py:attribute:: query(query, **params)
+
+        Run an arbitrary query against the graph, with optional parameters.
+
+        When not called, returns a reference to the Graph's :py:class:`Query`
+        object.
+
+    :param query: An object that stringifies to a Cypher query.
+    :param params: The values for the query's parameters.
+    :return: A Neo4J StatementResult corresponding to the issued query.
+    :rtype: `neo4j.v1.StatementResult`_
+
+    .. py:attribute:: schema
+
+        A reference to the Graph's :py:class:`Schema` object.
+
+    .. py:method:: session
+
+        Returns `a session from the underlying driver`_'s pool.
+
+
+.. py:class:: graph.query
+
+    .. py:method:: graph.query.all
 
         Returns the result of ``MATCH (all) RETURN all``.
 
-    .. py:method:: log(query, params)
+    .. py:method:: graph.query.log(query, params)
 
-        Log the given query and parameters. When not called, this property
-        returns a :py:class:`QueryLog`, a subclass of :py:class:`OrderedDict`
-        used for logging.
+        Log the given query and parameters. For other options, see
+        :py:class:`graph.query.log`.
 
 
-.. py:class:: Schema
+.. py:class:: graph.query.log
 
-    .. py:method:: Schema.add(nodetype, overwrite=False)
+    .. py:attribute:: MAX_SIZE
+
+        *int* The maximum number of log entries to store.
+
+
+.. py:class:: graph.schema
+
+    .. py:method:: graph.schema.add(nodetype, overwrite=False)
 
         Add a NodeType to the schema.
 
@@ -92,32 +98,32 @@ Schema Classes
     :param bool overwrite: If set, DROP and re-CREATE any existing schema
     :rtype: None
 
-    .. py:attribute:: Schema.constraints
+    .. py:attribute:: graph.schema.constraints
 
         Get current graph constraints lazily.
 
         On first access, this fetches from the database. Afterwards, call
         :py:meth:`update()` to refresh.
 
-    .. py:attribute:: Schema.indexes
+    .. py:attribute:: graph.schema.indexes
 
         Get current graph indexes lazily.
 
         On first access, this fetches from the database. Afterwards, call
         :py:meth:`update()` to refresh.
 
-    .. py:attribute:: Schema.labels
+    .. py:attribute:: graph.schema.labels
 
         Get current graph labels lazily.
 
         On first access, this fetches from the database. Afterwards, call
         :py:meth:`update()` to refresh.
 
-    .. py:attribute:: Schema.ls
+    .. py:attribute:: graph.schema.ls
 
         Cypher statements for currently defined schema.
 
-    .. py:method:: Schema.update
+    .. py:method:: graph.schema.update
 
         Refresh constraints, indexes, and labels.
 

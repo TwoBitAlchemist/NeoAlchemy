@@ -25,4 +25,6 @@ version 3.0 or higher! If you don't have an environment set up, consider
    intro
    apis
    query-builder
+   reflect
    schema-classes
+   querybuilder-classes

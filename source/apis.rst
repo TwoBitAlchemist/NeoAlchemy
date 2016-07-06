@@ -6,8 +6,8 @@ Getting to Know NeoAlchemy
 
 .. note::
     Got a graph full of data already? Don't worry! NeoAlchemy fully supports
-    reflecting your database. If you're just starting out with NeoAlchemy, it
-    is still recommended that you skim this section as an introduction to its
+    :doc:`reflect`. If you're just starting out with NeoAlchemy, it is still
+    recommended that you skim this section as an introduction to its
     capabilities.
 
 
@@ -18,7 +18,7 @@ low-level API, and trades control for **automation**.
 
 You don't have to choose between APIs! The low-level and high-level APIs can be
 used in conjunction with one another as well as with manual Cypher querying
-with :py:class:`Graph`.
+with :py:class:`graph.query`.
 
 
 =================
