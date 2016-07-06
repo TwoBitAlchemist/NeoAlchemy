@@ -96,7 +96,7 @@ class Schema(object):
         """
         Add a NodeType to the schema.
 
-        If nodetype is already in the schema, does nothing and returns None.
+        If nodetype is already in the schema, does nothing.
         If nodetype is not in the schema, and not in the database, the
             appropriate schema-creating statements will be emitted.
         If nodetype is not in the schema, but is in the database, the schema
@@ -111,7 +111,7 @@ class Schema(object):
         if overwrite or nodetype.LABEL not in self.labels():
             if overwrite:
                 self.__graph.query(str(nodetype).replace('CREATE', 'DROP'))
-            return self.__graph.query(str(nodetype))
+            self.__graph.query(str(nodetype))
 
     def constraints(self):
         """
@@ -194,8 +194,7 @@ class Graph(GraphDatabase):
         try:
             protocol, url = url.split('://')
             if protocol.lower() != 'bolt':
-                warnings.warn('Switching protocols. Only Bolt is supported '
-                              'at this time.')
+                warnings.warn('Switching protocols. Only Bolt is supported.')
         except ValueError:
             pass
 

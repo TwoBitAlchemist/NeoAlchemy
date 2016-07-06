@@ -18,7 +18,7 @@ low-level API, and trades control for **automation**.
 
 You don't have to choose between APIs! The low-level and high-level APIs can be
 used in conjunction with one another as well as with manual Cypher querying
-through the Graph object.
+with :py:class:`Graph`.
 
 
 =================
@@ -44,9 +44,9 @@ this::
     metadata.create_all(engine)
 
 
-This defines a simple ``users`` table with three columns -- an ``id``, a 
-``name``, and ``fullname``. A call to ``metadata.create_all()`` is required to
-emit schema-generating DDL, laying out the empty table.
+This defines a simple :py:data:`users` table with three columns.  A call to
+:py:meth:`metadata.create_all()` is required to emit schema-generating DDL,
+laying out the empty table.
 
 The same thing in NeoAlchemy looks like this::
 
@@ -64,9 +64,10 @@ The same thing in NeoAlchemy looks like this::
     graph.schema.add(user)
 
 
-This creates a simple ``NodeType`` with three properties similar to the above
-table. Each property represents an available `constraint`_ in Neo4J. The
-proper indexes and constraints are created when ``graph.schema.add`` is called.
+This creates a simple :py:class:`NodeType` with three properties similar to the
+above table. Each property represents an available `constraint`_ in Neo4J. The
+proper indexes and constraints are created when :py:meth:`graph.schema.add` is
+called.
 
 .. note::
     The ``required`` property represents a `Property Existence constraint`_
@@ -113,8 +114,8 @@ The same thing in NeoAlchemy looks like this::
 
 Notice that unlike SqlAlchemy, we have far less to import and we do not need
 to manually trigger metadata creation. We also don't have to explicitly
-specify a primary label for our underlying ``NodeType``. NeoAlchemy uses the
-name of the class if none is specified.
+specify a primary label for our underlying :py:class:`NodeType`. NeoAlchemy
+uses the name of the class if none is specified.
 
 .. note::
     Since every class is connected to a graph explicitly via its ``.graph``

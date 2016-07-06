@@ -26,7 +26,7 @@ general, you only have to specify what you have changed from the default
 Neo4J settings, and NeoAlchemy will infer the rest.
 
 For example, if you connect to your graph with the username and password
-``neo4j`` at the default port (7474) on ``localhost``, connecting to a graph is
+``neo4j`` at the default port (7687) on ``localhost``, connecting to a graph is
 as simple as::
 
     from neoalchemy import Graph
@@ -40,7 +40,7 @@ could connect like this::
     graph = Graph(password='password')
 
 Of course, you can have a completely custom setup if you like. Just pass a URL
-and the Graph class will parse it for you::
+and :py:class:`Graph` will parse it for you::
 
     graph = Graph('bolt://my_user:my_pass@my.neo4j.server.com:24789')
 
