@@ -24,7 +24,7 @@ class VerbCollection(list):
         return '\n'.join(map(str, self))
 
 
-class Verb(object):
+class CypherVerb(object):
     def __init__(self, nodetype, var='n', **params):
         self.verb = self.__class__.__name__.upper()
 
@@ -140,6 +140,11 @@ class Verb(object):
 
         return '(%s:%s%s)' % (self._['var'], labels, properties)
 
+    def delete(self, args, detach=False):
+        detach = 'DETACH ' if detach else ''
+        self._['delete'] = detach + ', '.join(self._parse_args(args))
+        return self
+
     def remove(self, args=()):
         self._['remove'] = ', '.join(self._parse_args(args))
         return self
@@ -204,7 +209,7 @@ class Relation(NodeType):
         super(Relation, self).__init__(self.type, *args, **kw)
 
 
-class Create(Verb):
+class Create(CypherVerb):
     def __init__(self, *args, **kw):
         self.unique = bool(kw.pop('unique', None))
         super(Create, self).__init__(*args, **kw)
@@ -223,7 +228,7 @@ class Merge(Create):
     pass
 
 
-class Match(Verb):
+class Match(CypherVerb):
     def __init__(self, *args, **kw):
         self.optional = bool(kw.pop('optional', None))
         super(Match, self).__init__(*args, **kw)
@@ -233,10 +238,11 @@ class Match(Verb):
             self.verb = 'OPTIONAL MATCH'
         return super(Match, self).compile()
 
-    def delete(self, args, detach=False):
-        detach = 'DETACH ' if detach else ''
-        self._['delete'] = detach + ', '.join(self._parse_args(args))
-        return self
+    @property
+    def params(self):
+        return {key: value
+                for key, value in dict(self._['params'] or {}).items()
+                if value is not None}
 
     def limit(self, value):
         self._['limit'] = int(value)
@@ -247,12 +253,6 @@ class Match(Verb):
         self._['order_by'] = ' '.join((', '.join(self._parse_args(args)),
                                        direction))
         return self
-
-    @property
-    def params(self):
-        return {key: value
-                for key, value in dict(self._['params'] or {}).items()
-                if value is not None}
 
     def skip(self, value):
         self._['skip'] = int(value)

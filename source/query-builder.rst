@@ -39,7 +39,7 @@ We can see the query this generates by printing it::
 NeoAlchemy has automatically applied the ``Person`` label and created
 parameters associated with each of the properties we defined. We can see
 the current values for each parameter by inspecting the
-:py:attr:`Create.params` dict::
+:py:attr:`~CypherVerb.params` dict::
 
     >>> create.params
     {'age_n': None, 'hair_color_n': None, 'name_n': None}
@@ -56,11 +56,11 @@ by specifying a second argument to :py:class:`Create`::
 This is an important feature which will come in handy when specifying more
 complex queries, as we will see later.
 
-Properties can either be set one at a time using :py:meth:`Create.set`::
+Properties can either be set one at a time using :py:meth:`~CypherVerb.set`::
 
     create = Create(Person).set(Person.hair_color, 'red')
 
-Or set directly using the :py:attr:`Create.params` dict::
+Or set directly using the :py:attr:`~CypherVerb.params` dict::
 
     >>> create.params['name_n'] = 'Ali'
     >>> ali_params = {'age_n': 29, 'hair_color_n': 'red'}
@@ -113,10 +113,10 @@ return something::
 Return
 ------
 
-If you call :py:meth:`Match.return_` with no arguments, the resulting query
-will ``RETURN *``, returning everything you have matched. `For performance
-reasons`_, however, this is often not the best choice. There are several ways
-to return only what you need instead of everything you've touched.
+If you call :py:meth:`~CypherVerb.return_` with no arguments, the resulting
+query will ``RETURN *``, returning everything you have matched. `For
+performance reasons`_, however, this is often not the best choice. There are
+several ways to return only what you need instead of everything you've touched.
 
 ============================  ==========================================  ========================
  What to Return                NeoAlchemy                                  Cypher Equivalent
@@ -130,15 +130,17 @@ to return only what you need instead of everything you've touched.
 ============================  ==========================================  ========================
 
 .. note::
-    The :py:meth:`Match.remove` and :py:meth:`Match.delete` methods work the
-    same way. They correspond to Cypher's `REMOVE`_ and `DELETE`_.
+    The :py:meth:`~CypherVerb.remove` and :py:meth:`~CypherVerb.delete` methods
+    work the same way. They correspond to Cypher's `REMOVE`_ and `DELETE`_.
+
+.. _cypher-expression:
 
 -----
 Where
 -----
 
-As with :py:meth:`Create.set`, the :py:meth:`Match.where` method can be used to
-set parameters one at a time::
+As with :py:meth:`~CypherVerb.set`, the :py:meth:`~CypherVerb.where` method can
+be used to set parameters one at a time::
 
     match = Match(Person).where(Person.name=='Ali')
 
@@ -156,6 +158,13 @@ using one of the NodeType's Properties.
  Lesser than              ``Person.age < 29``            ``n.age < 29``
  Lesser than or equal     ``Person.age <= 29``           ``n.age <= 29``
 =======================  =============================  =======================
+
+.. _chaining:
+
+--------
+Chaining
+--------
+
 
 .. _familiar Cypher verbs: https://neo4j.com/docs/developer-manual/current/#query-create
 .. _Neo4J StatementResult: https://neo4j.com/docs/api/python-driver/current/#neo4j.v1.StatementResult
