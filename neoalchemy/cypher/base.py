@@ -25,7 +25,7 @@ class VerbCollection(list):
 
 
 class Verb(object):
-    def __init__(self, nodetype, param_id='n', **params):
+    def __init__(self, nodetype, var='n', **params):
         self.verb = self.__class__.__name__.upper()
 
         if isinstance(nodetype, self.__class__):
@@ -35,10 +35,10 @@ class Verb(object):
 
         self._ = defaultdict(lambda: None)
         self._['params'] = {}
-        self._['param_id'] = param_id
         self._['relations'] = list(params.get('relations', []))
         self._['set'] = CypherExpressionList()
         self._['where'] = CypherExpressionList()
+        self._['var'] = var
         self._compile_params(**params)
 
     def compile(self):
@@ -50,11 +50,11 @@ class Verb(object):
                 raise CompileError
 
             end_node = relation.end_node
-            param_id = end_node._['param_id']
-            if param_id == 'n':
-                param_id += str(i)
+            var = end_node._['var']
+            if var == 'n':
+                var += str(i)
             end_node._.update(self._)
-            end_node._['param_id'] = param_id
+            end_node._['var'] = var
             end_node._compile_params(**end_node.params)
             self._['params'].update(end_node.params)
 
@@ -69,7 +69,7 @@ class Verb(object):
             for expr in self._['where']:
                 if not isinstance(expr, six.string_types):
                     if expr.node_key is None:
-                        expr.node_key = self._['param_id']
+                        expr.node_key = self._['var']
                     if expr.param_key is None:
                         expr.param_key = 'param%i' % param_count
                         param_count += 1
@@ -79,7 +79,7 @@ class Verb(object):
         if self._['set']:
             for expr in self._['set']:
                 if expr.node_key is None:
-                    expr.node_key = self._['param_id']
+                    expr.node_key = self._['var']
                 if expr.param_key is None:
                     expr.param_key = 'param%i' % param_count
                     param_count += 1
@@ -104,11 +104,10 @@ class Verb(object):
         return self
 
     def _compile_params(self, **params):
-        param_id = self._['param_id']
+        var = self._['var']
         self._['params'] = {}
         for prop_name, prop in self.nodetype.schema.items():
-            param_key = '%s%s' % (prop_name,
-                                  ('_%s' % param_id) if param_id else '')
+            param_key = '%s%s' % (prop_name, ('_%s' % var) if var else '')
             self._['params'][param_key] = params.get(prop_name, prop.default)
         return self
 
@@ -116,10 +115,10 @@ class Verb(object):
         if isinstance(args, six.string_types):
             yield args
             return
-        for param_id in args:
-            nodevar = param_id or 'n'
+        for var in args:
+            nodevar = var or 'n'
             try:
-                properties = args[param_id]
+                properties = args[var]
             except TypeError:
                 yield nodevar
             else:
@@ -139,7 +138,7 @@ class Verb(object):
                 properties.append('%s: {%s}' % (param_name, param_key))
         properties = ' {%s}' % ', '.join(properties) if properties else ''
 
-        return '(%s:%s%s)' % (self._['param_id'], labels, properties)
+        return '(%s:%s%s)' % (self._['var'], labels, properties)
 
     def remove(self, args=()):
         self._['remove'] = ', '.join(self._parse_args(args))
@@ -154,15 +153,15 @@ class Verb(object):
         self._['return'] = distinct + ', '.join(self._parse_args(args))
         return self
 
-    def set(self, property_, value, param_id=None):
+    def set(self, property_, value, var=None):
         expr = LogicalCypherExpression('=', value,
                                        property_name=property_.name)
-        expr.param_id = param_id
+        expr.node_key = var
         self._['set'] += expr
         return self
 
-    def where(self, expr, param_id=None, or_=False):
-        expr.param_id = param_id
+    def where(self, expr, var=None, or_=False):
+        expr.node_key = var
         if not self._['where']:
             self._['where'] += expr
             return self

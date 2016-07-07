@@ -20,18 +20,19 @@ QueryBuilder Classes
         Return the underlying ``CREATE`` query, which has been automatically
         parametrized.
 
-    .. py:method:: Create.set(property, value)
+    .. py:method:: Create.set(property, value, var='n')
 
         Set a property to a value. Can be called multiple times.
 
     :param Property property: The property to set
-    :param value: The value of the property to set
+    :param any value: The value of the property to set
+    :param str var: The variable representing the node in Cypher.
     :return: The Create object, to support chaining.
     :rtype: :py:class:`Create`
 
     .. py:method:: Create.delete(args=None)
 
-        Set the ``DELETE`` value for the query.
+        Set the ``DELETE`` clause for the query.
 
     :param args: The way this is handled is explained in the
                  :ref:`return-signature` docs.
@@ -40,7 +41,7 @@ QueryBuilder Classes
 
     .. py:method:: Create.remove(args=None)
 
-        Set the ``REMOVE`` value for the query.
+        Set the ``REMOVE`` clause for the query.
 
     :param args: The way this is handled is explained in the
                  :ref:`return-signature` docs.
@@ -49,7 +50,7 @@ QueryBuilder Classes
 
     .. py:method:: Create.return_(args=None, distinct=False)
 
-        Set the ``RETURN`` value for the query.
+        Set the ``RETURN`` clause for the query.
 
     :param args: Parsed according to :ref:`return-signature`
     :return: The Create object, to support chaining.
@@ -73,7 +74,7 @@ QueryBuilder Classes
 
     .. py:method:: Match.delete(args=None)
 
-        Set the ``DELETE`` value for the query.
+        Set the ``DELETE`` clause for the query.
 
     :param args: The way this is handled is explained in the
                  :ref:`return-signature` docs.
@@ -82,7 +83,7 @@ QueryBuilder Classes
 
     .. py:method:: Match.remove(args=None)
 
-        Set the ``REMOVE`` value for the query.
+        Set the ``REMOVE`` clause for the query.
 
     :param args: The way this is handled is explained in the
                  :ref:`return-signature` docs.
@@ -91,7 +92,7 @@ QueryBuilder Classes
 
     .. py:method:: Match.return_(args=None, distinct=False)
 
-        Set the ``RETURN`` value for the query.
+        Set the ``RETURN`` clause for the query.
 
     :param args: The way this is handled is explained in the
                  :ref:`return-signature` docs.
@@ -100,3 +101,12 @@ QueryBuilder Classes
     :rtype: :py:class:`Match`
 
     .. py:method:: Match.where(expr, var='n', or_=False)
+
+        Set the ``WHERE`` clause for the query.
+
+    :param CypherExpression expr: See the docs for :py:class:`CypherExpression`
+    :param str var: The variable representing the node in Cypher.
+    :param bool or\_: If set, this will be joined with the preceding ``WHERE``
+                      clause using ``OR`` instead of ``AND``.
+    :return: The Match object, to support chaining.
+    :rtype: :py:class:`Match`

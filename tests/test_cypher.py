@@ -69,10 +69,10 @@ def test_multiple_named_params():
 def test_match_with_where_expressions():
     Person = NodeType('Person', Property('name'))
     match = (Match(Person, 'n')['KNOWS'](Person, 'm')
-               .where(Person.name=='Alice', 'n'))
+               .where(Person.name=='Alice', 'm'))
     assert str(match) == ('MATCH (n:Person)-[r1:KNOWS]->(m:Person)'
-                          " WHERE n.name = {name_n}")
-    assert match.params == {'name_n': 'Alice'}
+                          " WHERE m.name = {name_m}")
+    assert match.params == {'name_m': 'Alice'}
 
 
 def test_matching_super_simple_stuff():
