@@ -101,7 +101,8 @@ not a full query yet. In order to make this useful, at a minimum we need to
 return something::
 
     >>> print(match.return_())
-    MATCH (n:Person {hair_color: {hair_color_n}, name: {name_n}, age: {age_n}}) RETURN *
+    MATCH (n:Person {hair_color: {hair_color_n}, name: {name_n}, age: {age_n}})
+    RETURN *
 
 .. note::
     Notice the function is **return_**, not **return**. The latter would cause
@@ -212,6 +213,42 @@ It also means that you can write things like this::
     Match(Person).where(Person.name=='Ali')['KNOWS'](Person)
     # MATCH (n:Person)-[r1:KNOWS]->(n1:Person) WHERE n.name = {name_n}
 
+----------------
+Set Combinations
+----------------
+
+Not all Cypher queries are one line, and neither are all NeoAlchemy queries.
+You can use Python's set operators to combine several NeoAlchemy objects into
+multi-line queries before returning. The ``&`` (`set intersection`_) operator
+is used for line-by-line cominbation::
+
+    >>> match = (Match(Person).where(Person.name=='Ali')&
+    ...          Match(Person, 'n', optional=True)['KNOWS'](Person, 'm')
+    ...             .where(Person.name=='Frank', 'm'))
+    >>> print(match.return_('r1'))
+    MATCH (n:Person) WHERE n.name = {name_n}
+    OPTIONAL MATCH (n:Person)-[r1:KNOWS]->(m:Person) WHERE m.name = {name_m}
+    RETURN r1
+
+The ``|`` (`set union`_) operator is used for ``UNION ALL``. To borrow an
+example from the Cypher docs::
+
+    >>> Movie = NodeType('Movie', Property('title'))
+    >>> (Match(Person)['ACTED_IN'](Movie).return_({'n': 'name', 'n1': 'title'})|
+    ...  Match(Person)['DIRECTED'](Movie).return_({'n': 'name', 'n1': 'title'}))
+    >>> print(_)
+    MATCH (n:Person {name: {name_n}})-[r1:ACTED_IN]->(n1:Movie {title: {title_n1}})
+    RETURN n.name, n1.title
+    UNION ALL
+    MATCH (n:Person {name: {name_n}})-[r1:DIRECTED]->(n1:Movie {title: {title_n1}})
+    RETURN n.name, n1.title
+
+If you instead want ``UNION``, use the ``^`` (`exclusive or`_) operator.
+
+.. note::
+    ``UNION`` must be performed on queries with very similar result structures.
+    You must take this into account when building your queries.
+
 
 .. _familiar Cypher verbs: https://neo4j.com/docs/developer-manual/current/#query-create
 .. _Neo4J StatementResult: https://neo4j.com/docs/api/python-driver/current/#neo4j.v1.StatementResult
@@ -219,3 +256,6 @@ It also means that you can write things like this::
 .. _REMOVE: https://neo4j.com/docs/developer-manual/current/#query-remove
 .. _DELETE: https://neo4j.com/docs/developer-manual/current/#query-delete
 .. _Cypher: https://neo4j.com/developer/cypher-query-language/
+.. _set intersection: https://docs.python.org/3/library/stdtypes.html#set.intersection
+.. _set union: https://docs.python.org/3/library/stdtypes.html#set.union
+.. _exclusive or: https://docs.python.org/3/library/stdtypes.html#set.symmetric_difference

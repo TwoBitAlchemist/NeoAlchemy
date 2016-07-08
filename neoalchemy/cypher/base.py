@@ -13,6 +13,14 @@ class VerbCollection(list):
         self.append(x)
         return self
 
+    def __or__(self, x):
+        self.extend(['UNION ALL', x])
+        return self
+
+    def __xor__(self, x):
+        self.extend(['UNION', x])
+        return self
+
     @property
     def params(self):
         params = {}
@@ -22,6 +30,18 @@ class VerbCollection(list):
 
     def __str__(self):
         return '\n'.join(map(str, self))
+
+    def delete(self, *args, **kw):
+        self[-1].delete(*args, **kw)
+        return self
+
+    def remove(self, *args, **kw):
+        self[-1].remove(*args, **kw)
+        return self
+
+    def return_(self, *args, **kw):
+        self[-1].return_(*args, **kw)
+        return self
 
 
 class CypherVerb(object):
@@ -87,12 +107,12 @@ class CypherVerb(object):
             self.query += ' SET %s' % ', '.join(map(str, self._['set']))
 
         if self._['remove']:
-            self.query += ' REMOVE %s' % self._['remove']
+            self.query += '\nREMOVE %s' % self._['remove']
         if self._['delete']:
-            self.query += ' DELETE %s' % self._['delete']
+            self.query += '\nDELETE %s' % self._['delete']
 
         if self._['return']:
-            self.query += ' RETURN %s' % self._['return']
+            self.query += '\nRETURN %s' % self._['return']
 
         if self._['order_by']:
             self.query += ' ORDER BY %s' % self._['order_by']
@@ -190,6 +210,12 @@ class CypherVerb(object):
     def __getitem__(self, rel):
         self._['relations'].append(Relation(rel))
         return self
+
+    def __or__(self, x):
+        return VerbCollection([self]) | x
+
+    def __xor__(self, x):
+        return VerbCollection([self]) ^ x
 
     def __str__(self):
         return self.compile().query
