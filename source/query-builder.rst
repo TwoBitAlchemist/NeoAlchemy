@@ -165,9 +165,57 @@ using one of the NodeType's Properties.
 Chaining
 --------
 
+An important concept in NeoAlchemy is method chaining. Most functions ``return
+self`` so you can call them like so::
+
+    match = Match(Person).where(Person.name=='Ali').return_({'n': 'name'})
+
+This makes for convenient and expressive one-liners. However, this also means
+that state is easy to build up over time and as part of larger algorithms::
+
+    match = Match(Person)
+    # ... some code ...
+    match = match.where(Person.age=age)
+    # ... more code...
+    match.return_(ret_params)
+
+-------------
+Relationships
+-------------
+
+.. image:: iconography.svg
+   :width: 50%
+   :alt: Cypher: (a)-[:KNOWS]->(b) NeoAlchemy: (a)['KNOWS'](b)
+   :align: left
+
+Like `Cypher`_, NeoAlchemy "describes patterns in graphs visually using an
+ascii-art syntax"::
+
+    Create(Person, 'a')['KNOWS'](Person, 'b')
+
+This creates exactly the relationship you would expect::
+
+    >>> Person = NodeType('Person', Property('name'))
+    >>> create = Create(Person, 'a')['KNOWS'](Person, 'b')
+    >>> print(create)
+    CREATE (a:Person {name: {name_a}})-[r1:KNOWS]->(b:Person {name: {name_b}})
+    >>> create.params
+    {'name_a': None, 'name_b': None}
+
+This is another form of chaining! This not only means that relationship chains
+can be arbitrarily long::
+
+    Create(Person)['KNOWS'](Person)['KNOWS'](Person)['KNOWS'](Person)
+
+It also means that you can write things like this::
+
+    Match(Person).where(Person.name=='Ali')['KNOWS'](Person)
+    # MATCH (n:Person)-[r1:KNOWS]->(n1:Person) WHERE n.name = {name_n}
+
 
 .. _familiar Cypher verbs: https://neo4j.com/docs/developer-manual/current/#query-create
 .. _Neo4J StatementResult: https://neo4j.com/docs/api/python-driver/current/#neo4j.v1.StatementResult
 .. _For performance reasons: https://neo4j.com/docs/developer-manual/current/#query-tuning
 .. _REMOVE: https://neo4j.com/docs/developer-manual/current/#query-remove
 .. _DELETE: https://neo4j.com/docs/developer-manual/current/#query-delete
+.. _Cypher: https://neo4j.com/developer/cypher-query-language/

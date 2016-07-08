@@ -6,7 +6,7 @@ QueryBuilder Classes
 
 .. py:class:: CypherVerb
 
-    Parent class to :py:class:`Create` and :py:class:`Merge`.
+    Parent class to :py:class:`Create` and :py:class:`Match`.
 
     .. py:attribute:: params
 
@@ -17,11 +17,12 @@ QueryBuilder Classes
         Return the underlying Cypher query, which has been automatically
         parametrized.
 
-    .. py:method:: delete(args=None)
+    .. py:method:: delete(args=None, detach=False)
 
         Set the ``DELETE`` clause for the query.
 
     :param args: See the docs for :ref:`return-signature`.
+    :param bool detach: If set, ``DETACH DELETE`` instead.
     :return: The object itself, to support :ref:`chaining`.
 
     .. py:method:: remove(args=None)
