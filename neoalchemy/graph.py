@@ -106,9 +106,9 @@ class Schema(object):
         if nodetype.LABEL in self.__schema:
             return
 
-        self.__schema[nodetype.LABEL] = str(nodetype)
-        # Scan the graph for the schema
-        if overwrite or nodetype.LABEL not in self.labels():
+        statement = str(nodetype)
+        self.__schema[nodetype.LABEL] = statement
+        if overwrite or statement not in self.indexes() + self.constraints():
             if overwrite:
                 self.__graph.query(str(nodetype).replace('CREATE', 'DROP'))
             self.__graph.query(str(nodetype))

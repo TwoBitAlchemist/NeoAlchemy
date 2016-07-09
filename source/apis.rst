@@ -4,13 +4,6 @@
 Getting to Know NeoAlchemy
 **************************
 
-.. note::
-    Got a graph full of data already? Don't worry! NeoAlchemy fully supports
-    :doc:`reflect`. If you're just starting out with NeoAlchemy, it is still
-    recommended that you skim this section as an introduction to its
-    capabilities.
-
-
 NeoAlchemy features both a low-level and a high-level API for working with
 Neo4J. The low-level API aims to be **expressive**, offering the user
 **flexibility** and **control**.  The high-level API is built on top of the
@@ -73,6 +66,8 @@ called.
     The ``required`` property represents a `Property Existence constraint`_
     which is only supported in the `Neo4J Enterprise Edition`_.
 
+Can't wait to learn more? Dive into :doc:`query-builder`.
+
 
 ==================
 The High-Level API
@@ -123,6 +118,7 @@ uses the name of the class if none is specified.
     distinguishing which classes map to which graphs, even if multiple classes
     touching different graphs are grouped in the same file.
 
+Wanna learn more? Skip straight to the :doc:`schema-ORM`.
 
 .. _SqlAlchemy Expression Language: http://docs.sqlalchemy.org/en/latest/core/tutorial.html
 .. _constraint: https://neo4j.com/docs/developer-manual/current/#query-constraints

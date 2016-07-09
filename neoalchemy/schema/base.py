@@ -6,7 +6,7 @@ from .operations import OperatorInterface
 class Property(OperatorInterface):
     def __init__(self, name=None, type=str, default=None,
                  indexed=False, unique=False, required=False):
-        self.__name = name or str(name)
+        self.__name = str(name) if name else None
         self.unique = bool(unique)
         self.indexed = self.unique or bool(indexed)
         self.required = bool(required)

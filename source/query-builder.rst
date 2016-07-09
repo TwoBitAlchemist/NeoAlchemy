@@ -4,6 +4,10 @@
 The QueryBuilder API
 ********************
 
+.. note::
+    If you don't need the QueryBuilder API, feel free to skip straight to
+    learning about the :doc:`schema-ORM`.
+
 The QueryBuilder API allows you to express familiar Cypher queries using normal
 Python objects and operators. To demonstrate it, we will use a simple
 :py:class:`NodeType` like the ``user`` we defined in the previous section.
@@ -27,7 +31,7 @@ Cypher verbs`_. These are located in the :py:mod:`neoalchemy.cypher` module::
 
     from neoalchemy.cypher import Create
 
-Let's start by constructing about the simplest query possible::
+Let's start by constructing perhaps the simplest query possible::
 
     create = Create(Person)
 
@@ -39,7 +43,7 @@ We can see the query this generates by printing it::
 NeoAlchemy has automatically applied the ``Person`` label and created
 parameters associated with each of the properties we defined. We can see
 the current values for each parameter by inspecting the
-:py:attr:`~CypherVerb.params` dict::
+:py:attr:`~neoalchemy.cypher.CypherVerb.params` dict::
 
     >>> create.params
     {'age_n': None, 'hair_color_n': None, 'name_n': None}
@@ -47,7 +51,7 @@ the current values for each parameter by inspecting the
 Each parameter is named according to its associated property and the variable
 representing its associated node in the underlying Cypher. By Neo4J convention,
 the default parameter is ``n``. This can be freely changed to whatever you like
-by specifying a second argument to :py:class:`Create`::
+by specifying a second argument to :py:class:`~neoalchemy.cypher.Create`::
 
     >>> create = Create(Person, 'm')
     >>> print(create)
@@ -56,11 +60,13 @@ by specifying a second argument to :py:class:`Create`::
 This is an important feature which will come in handy when specifying more
 complex queries, as we will see later.
 
-Properties can either be set one at a time using :py:meth:`~CypherVerb.set`::
+Properties can either be set one at a time using
+:py:meth:`~neoalchemy.cypher.CypherVerb.set`::
 
     create = Create(Person).set(Person.hair_color, 'red')
 
-Or set directly using the :py:attr:`~CypherVerb.params` dict::
+Or set directly using the :py:attr:`~neoalchemy.cypher.CypherVerb.params`
+dict::
 
     >>> create.params['name_n'] = 'Ali'
     >>> ali_params = {'age_n': 29, 'hair_color_n': 'red'}
@@ -114,10 +120,11 @@ return something::
 Return
 ------
 
-If you call :py:meth:`~CypherVerb.return_` with no arguments, the resulting
-query will ``RETURN *``, returning everything you have matched. `For
-performance reasons`_, however, this is often not the best choice. There are
-several ways to return only what you need instead of everything you've touched.
+If you call :py:meth:`~neoalchemy.cypher.CypherVerb.return_` with no arguments,
+the resulting query will ``RETURN *``, returning everything you have matched.
+`For performance reasons`_, however, this is often not the best choice. There
+are several ways to return only what you need instead of everything you've
+touched.
 
 ============================  ==========================================  ========================
  What to Return                NeoAlchemy                                  Cypher Equivalent
@@ -131,8 +138,9 @@ several ways to return only what you need instead of everything you've touched.
 ============================  ==========================================  ========================
 
 .. note::
-    The :py:meth:`~CypherVerb.remove` and :py:meth:`~CypherVerb.delete` methods
-    work the same way. They correspond to Cypher's `REMOVE`_ and `DELETE`_.
+    The :py:meth:`~neoalchemy.cypher.CypherVerb.remove` and
+    :py:meth:`~neoalchemy.cypher.CypherVerb.delete` methods work the same way.
+    They correspond to Cypher's `REMOVE`_ and `DELETE`_.
 
 .. _cypher-expression:
 
@@ -140,12 +148,13 @@ several ways to return only what you need instead of everything you've touched.
 Where
 -----
 
-As with :py:meth:`~CypherVerb.set`, the :py:meth:`~CypherVerb.where` method can
-be used to set parameters one at a time::
+As with :py:meth:`~neoalchemy.cypher.CypherVerb.set`, the
+:py:meth:`~neoalchemy.cypher.CypherVerb.where` method can be used to set
+parameters one at a time::
 
     match = Match(Person).where(Person.name=='Ali')
 
-The first argument to ``where`` is a ``CypherExpression`` object, which is
+The first argument is a :py:class:`CypherExpression` object, which is
 automatically created when you perform the corresponding Python comparison
 using one of the NodeType's Properties.
 
@@ -162,11 +171,11 @@ using one of the NodeType's Properties.
 
 .. _chaining:
 
---------
+========
 Chaining
---------
+========
 
-An important concept in NeoAlchemy is method chaining. Most functions ``return
+An important concept in NeoAlchemy is method chaining. Most methods ``return
 self`` so you can call them like so::
 
     match = Match(Person).where(Person.name=='Ali').return_({'n': 'name'})
@@ -213,9 +222,9 @@ It also means that you can write things like this::
     Match(Person).where(Person.name=='Ali')['KNOWS'](Person)
     # MATCH (n:Person)-[r1:KNOWS]->(n1:Person) WHERE n.name = {name_n}
 
-----------------
+================
 Set Combinations
-----------------
+================
 
 Not all Cypher queries are one line, and neither are all NeoAlchemy queries.
 You can use Python's set operators to combine several NeoAlchemy objects into

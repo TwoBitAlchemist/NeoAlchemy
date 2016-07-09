@@ -20,12 +20,12 @@ version 3.0 or higher! If you don't have an environment set up, consider
 ------------------------------------------------------------------------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    intro
    apis
    query-builder
    schema-ORM
-   reflect
    schema-classes
    querybuilder-classes
+   ORM-classes

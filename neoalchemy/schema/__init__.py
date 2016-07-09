@@ -1,1 +1,2 @@
-from .models import Node, NodeType, Property
+from .base import NodeType, Property
+from .orm import Node

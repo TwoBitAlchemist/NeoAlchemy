@@ -18,9 +18,10 @@ class PropertyDescriptor(object):
         if obj is None:
             raise AttributeError("Can't set attribute.")
 
-        value = self.__property.type(value)
         if (self.__property.value is not None and
                 self.__property.value != value):
+            if value is not None:
+                value = self.__property.type(value)
             obj.__changed__[self.__property.name] = value
         self.__property.value = value
 
@@ -44,7 +45,6 @@ class NodeMeta(type):
                     prop.name = prop_name
                 properties.append(prop)
                 attrs[prop_name] = PropertyDescriptor(prop)
-
         attrs['__nodetype__'] = NodeType(labels[0], *properties,
                                          extra_labels=labels[1:])
 
