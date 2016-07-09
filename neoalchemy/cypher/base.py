@@ -54,7 +54,7 @@ class CypherVerb(object):
             self.nodetype = nodetype
 
         self._ = defaultdict(lambda: None)
-        self._['params'] = {}
+        self.params = {}
         self._['relations'] = list(params.get('relations', []))
         self._['set'] = CypherExpressionList()
         self._['where'] = CypherExpressionList()
@@ -76,7 +76,7 @@ class CypherVerb(object):
             end_node._.update(self._)
             end_node._['var'] = var
             end_node._compile_params(**end_node.params)
-            self._['params'].update(end_node.params)
+            self.params.update(end_node.params)
 
             end_node = end_node._write_node()
             if relation.type:
@@ -93,7 +93,7 @@ class CypherVerb(object):
                     if expr.param_key is None:
                         expr.param_key = 'param%i' % param_count
                         param_count += 1
-                    self._['params'][expr.param_key] = expr.value
+                    self.params[expr.param_key] = expr.value
             self.query += ' WHERE %s' % self._['where']
 
         if self._['set']:
@@ -103,7 +103,7 @@ class CypherVerb(object):
                 if expr.param_key is None:
                     expr.param_key = 'param%i' % param_count
                     param_count += 1
-                self._['params'][expr.param_key] = expr.value
+                self.params[expr.param_key] = expr.value
             self.query += ' SET %s' % ', '.join(map(str, self._['set']))
 
         if self._['remove']:
@@ -125,10 +125,10 @@ class CypherVerb(object):
 
     def _compile_params(self, **params):
         var = self._['var']
-        self._['params'] = {}
+        self.params = {}
         for prop_name, prop in self.nodetype.schema.items():
             param_key = '%s%s' % (prop_name, ('_%s' % var) if var else '')
-            self._['params'][param_key] = params.get(prop_name, prop.default)
+            self.params[param_key] = params.get(prop_name, prop.default)
         return self
 
     def _parse_args(self, args):
@@ -153,7 +153,7 @@ class CypherVerb(object):
 
         properties = []
         if not (self._['where'] or self._['set']):
-            for param_key in self._['params']:
+            for param_key in self.params:
                 param_name = '_'.join(param_key.split('_')[:-1]) or param_key
                 properties.append('%s: {%s}' % (param_name, param_key))
         properties = ' {%s}' % ', '.join(properties) if properties else ''
@@ -245,10 +245,6 @@ class Create(CypherVerb):
             self.verb = 'CREATE UNIQUE'
         return super(Create, self).compile()
 
-    @property
-    def params(self):
-        return self._['params']
-
 
 class Merge(Create):
     pass
@@ -263,12 +259,6 @@ class Match(CypherVerb):
         if self.optional:
             self.verb = 'OPTIONAL MATCH'
         return super(Match, self).compile()
-
-    @property
-    def params(self):
-        return {key: value
-                for key, value in dict(self._['params'] or {}).items()
-                if value is not None}
 
     def limit(self, value):
         self._['limit'] = int(value)

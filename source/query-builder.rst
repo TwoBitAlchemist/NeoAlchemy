@@ -21,6 +21,20 @@ We'll call this one ``Person`` and give it a few simple characteristics::
         Property('hair_color')
     )
 
+Don't forget to create the indexes and constraints you specified using
+:py:meth:`graph.schema.add`::
+
+    graph.schema.add(Person)
+
+.. warning::
+    From `the Neo4J Docs`_:
+
+      Indexes in Neo4j are *eventually available*. That means that when you
+      first create an index the operation returns immediately. The index is
+      *populating* in the background and so is not immediately available for
+      querying. When the index has been fully populated it will eventually
+      come *online*. That means that it is now ready to be used in queries.
+
 
 ======
 Create
@@ -259,6 +273,7 @@ If you instead want ``UNION``, use the ``^`` (`exclusive or`_) operator.
     You must take this into account when building your queries.
 
 
+.. _the Neo4J Docs: http://neo4j.com/docs/developer-manual/current/#graphdb-neo4j-schema-indexes
 .. _familiar Cypher verbs: https://neo4j.com/docs/developer-manual/current/#query-create
 .. _Neo4J StatementResult: https://neo4j.com/docs/api/python-driver/current/#neo4j.v1.StatementResult
 .. _For performance reasons: https://neo4j.com/docs/developer-manual/current/#query-tuning

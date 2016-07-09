@@ -72,7 +72,7 @@ def test_match_with_where_expressions():
                .where(Person.name=='Alice', 'm'))
     assert str(match) == ('MATCH (n:Person)-[r1:KNOWS]->(m:Person)'
                           " WHERE m.name = {name_m}")
-    assert match.params == {'name_m': 'Alice'}
+    assert match.params['name_m'] == 'Alice'
 
 
 def test_matching_super_simple_stuff():
@@ -171,42 +171,54 @@ def test_arithmetic_cypher_expressions():
 
     match = Match(Person).where((Person.age + 5) == 23)
     assert str(match) == 'MATCH (n:Person) WHERE n.age + {param0} = {param1}'
-    assert match.params == {'param0': 5, 'param1': 23}
+    assert match.params['param0'] == 5
+    assert match.params['param1'] == 23
     match = Match(Person).where((5 + Person.age) == 23)
     assert str(match) == 'MATCH (n:Person) WHERE n.age + {param0} = {param1}'
-    assert match.params == {'param0': 5, 'param1': 23}
+    assert match.params['param0'] == 5
+    assert match.params['param1'] == 23
 
     match = Match(Person).where((Person.age - 4) == 13)
     assert str(match) == 'MATCH (n:Person) WHERE n.age - {param0} = {param1}'
-    assert match.params == {'param0': 4, 'param1': 13}
+    assert match.params['param0'] == 4
+    assert match.params['param1'] == 13
     match = Match(Person).where((4 - Person.age) == 13)
     assert str(match) == 'MATCH (n:Person) WHERE {param0} - n.age = {param1}'
-    assert match.params == {'param0': 4, 'param1': 13}
+    assert match.params['param0'] == 4
+    assert match.params['param1'] == 13
 
     match = Match(Person).where((Person.age * 5) == 23)
     assert str(match) == 'MATCH (n:Person) WHERE n.age * {param0} = {param1}'
-    assert match.params == {'param0': 5, 'param1': 23}
+    assert match.params['param0'] == 5
+    assert match.params['param1'] == 23
     match = Match(Person).where((5 * Person.age) == 23)
     assert str(match) == 'MATCH (n:Person) WHERE n.age * {param0} = {param1}'
-    assert match.params == {'param0': 5, 'param1': 23}
+    assert match.params['param0'] == 5
+    assert match.params['param1'] == 23
 
     match = Match(Person).where((Person.age / 4) == 13)
     assert str(match) == 'MATCH (n:Person) WHERE n.age / {param0} = {param1}'
-    assert match.params == {'param0': 4, 'param1': 13}
+    assert match.params['param0'] == 4
+    assert match.params['param1'] == 13
     match = Match(Person).where((4 / Person.age) == 13)
     assert str(match) == 'MATCH (n:Person) WHERE {param0} / n.age = {param1}'
-    assert match.params == {'param0': 4, 'param1': 13}
+    assert match.params['param0'] == 4
+    assert match.params['param1'] == 13
 
     match = Match(Person).where((Person.age % 4) == 13)
     assert str(match) == 'MATCH (n:Person) WHERE n.age % {param0} = {param1}'
-    assert match.params == {'param0': 4, 'param1': 13}
+    assert match.params['param0'] == 4
+    assert match.params['param1'] == 13
     match = Match(Person).where((4 % Person.age) == 13)
     assert str(match) == 'MATCH (n:Person) WHERE {param0} % n.age = {param1}'
-    assert match.params == {'param0': 4, 'param1': 13}
+    assert match.params['param0'] == 4
+    assert match.params['param1'] == 13
 
     match = Match(Person).where((Person.age ** 4) == 13)
     assert str(match) == 'MATCH (n:Person) WHERE n.age ^ {param0} = {param1}'
-    assert match.params == {'param0': 4, 'param1': 13}
+    assert match.params['param0'] == 4
+    assert match.params['param1'] == 13
     match = Match(Person).where((4 ** Person.age) == 13)
     assert str(match) == 'MATCH (n:Person) WHERE {param0} ^ n.age = {param1}'
-    assert match.params == {'param0': 4, 'param1': 13}
+    assert match.params['param0'] == 4
+    assert match.params['param1'] == 13

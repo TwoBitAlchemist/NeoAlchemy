@@ -61,7 +61,8 @@ class Node(object):
         for prop in self.__nodetype__.schema:
             setattr(self, prop, kw.get(prop))
 
-    def create(self):
-        params = {prop: getattr(self, prop)
+    def create(self, unique=False):
+        params = {'%s_n' % prop: getattr(self, prop)
                   for prop in self.__nodetype__.schema}
-        return self.graph.query(Create(self.__nodetype__, **params))
+        return self.graph.query(Create(self.__nodetype__, unique=unique),
+                                       **params)
