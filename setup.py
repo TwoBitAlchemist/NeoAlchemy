@@ -6,12 +6,11 @@ with open('README.md') as readme:
 
 setup(
     name='NeoAlchemy',
-    version='0.0.1',
+    version='0.8.0b',
     license='MIT',
     url='',
 
-    description=("A toolkit for Neo4J inspired by SQLAlchemy's "
-                 "Expression Language"),
+    description=('A microframework for Neo4J inspired by SQLAlchemy.'),
     long_description=long_desc,
     keywords='Neo4J Graph Database',
 
@@ -20,7 +19,7 @@ setup(
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Topic :: Database :: Front-Ends',
         'License :: OSI Approved :: MIT License',

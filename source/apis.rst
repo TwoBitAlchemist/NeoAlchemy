@@ -18,10 +18,10 @@ with :py:class:`graph.query`.
 The Low-Level API
 =================
 
-NeoAlchemy's low-level API is called QueryBuilder. It is similar in feel and
-purpose to the `SqlAlchemy Expression Language`_. In SqlAlchemy, defining
-the schema for a table and writing its metadata to the database looks like
-this::
+NeoAlchemy's low-level API is called :doc:`query-builder`. It is similar in
+feel and purpose to the `SqlAlchemy Expression Language`_. In SqlAlchemy,
+defining the schema for a table and writing its metadata to the database looks
+like this::
 
     from sqlalchemy import Table, Column, Integer, String, MetaData
 
@@ -73,7 +73,7 @@ Can't wait to learn more? Dive into :doc:`query-builder`.
 The High-Level API
 ==================
 
-NeoAlchemy's high-level API is the Schema ORM. Python classes are used to
+NeoAlchemy's high-level API is :doc:`schema-ORM`. Python classes are used to
 map metadata to the database transparently. It is compared below to
 `SqlAlchemy's Declarative ORM`_::
 
