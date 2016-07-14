@@ -14,7 +14,7 @@ QueryBuilder Classes
 
         A dict mapping query parameter names to their current values.
 
-    .. py:method:: CypherVerb.__str__
+    .. py:method:: __str__
 
         Return the underlying Cypher query, which has been automatically
         parametrized.
@@ -26,6 +26,19 @@ QueryBuilder Classes
     :param args: See the docs for :ref:`return-signature`.
     :param bool detach: If set, ``DETACH DELETE`` instead.
     :return: The object itself, to support :ref:`chaining`.
+
+    .. py:method:: limit(n)
+
+        Set the ``LIMIT`` clause for the query.
+
+    :param int n: The argument to ``LIMIT``
+
+    .. py:method:: order_by(args, desc=False)
+
+        Set the ``ORDER BY`` clause for the query.
+
+    :param args: See the docs for :ref:`return-signature`.
+    :param bool desc: If set, sort ``DESC``. Otherwise, sort ``ASC``.
 
     .. py:method:: remove(args=None)
 
@@ -51,6 +64,12 @@ QueryBuilder Classes
     :param str var: The variable representing the node in Cypher.
     :return: The object itself, to support :ref:`chaining`.
 
+    .. py:method:: skip(n)
+
+        Set the ``SKIP`` clause for the query.
+
+    :param int n: The argument to ``SKIP``
+
     .. py:method:: where(expr, var='n', or_=False)
 
         Set the ``WHERE`` clause for the query.
@@ -74,22 +93,3 @@ QueryBuilder Classes
     :param NodeType nodetype: The NodeType used to construct the query.
     :param str var: The variable representing the node in Cypher.
     :param bool optional: If set, ``OPTIONAL MATCH`` instead.
-
-    .. py:method:: Match.limit(n)
-
-        Set the ``LIMIT`` clause for the query.
-
-    :param int n: The argument to ``LIMIT``
-
-    .. py:method:: Match.order_by(args, desc=False)
-
-        Set the ``ORDER BY`` clause for the query.
-
-    :param args: See the docs for :ref:`return-signature`.
-    :param bool desc: If set, sort ``DESC``. Otherwise, sort ``ASC``.
-
-    .. py:method:: Match.skip(n)
-
-        Set the ``SKIP`` clause for the query.
-
-    :param int n: The argument to ``SKIP``
