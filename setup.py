@@ -27,5 +27,12 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
-    ]
+    ],
+
+    install_requires=[
+        'neo4j-driver',
+        'six',
+    ],
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest']
 )
