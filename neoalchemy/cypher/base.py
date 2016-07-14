@@ -165,6 +165,16 @@ class CypherVerb(object):
         self._['delete'] = detach + ', '.join(self._parse_args(args))
         return self
 
+    def limit(self, value):
+        self._['limit'] = int(value)
+        return self
+
+    def order_by(self, args, desc=False):
+        direction = 'DESC' if desc else 'ASC'
+        self._['order_by'] = ' '.join((', '.join(self._parse_args(args)),
+                                       direction))
+        return self
+
     def remove(self, args=()):
         self._['remove'] = ', '.join(self._parse_args(args))
         return self
@@ -183,6 +193,10 @@ class CypherVerb(object):
                                        property_name=property_.name)
         expr.node_key = var
         self._['set'] += expr
+        return self
+
+    def skip(self, value):
+        self._['skip'] = int(value)
         return self
 
     def where(self, expr, var=None, or_=False):
@@ -259,20 +273,6 @@ class Match(CypherVerb):
         if self.optional:
             self.verb = 'OPTIONAL MATCH'
         return super(Match, self).compile()
-
-    def limit(self, value):
-        self._['limit'] = int(value)
-        return self
-
-    def order_by(self, args, desc=False):
-        direction = 'DESC' if desc else 'ASC'
-        self._['order_by'] = ' '.join((', '.join(self._parse_args(args)),
-                                       direction))
-        return self
-
-    def skip(self, value):
-        self._['skip'] = int(value)
-        return self
 
 
 class CompileError(SyntaxError):
