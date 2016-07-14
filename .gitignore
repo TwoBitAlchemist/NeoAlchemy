@@ -16,6 +16,7 @@ typings/
 *.egg*
 *.cfg
 .coverage
+coverage.xml
 
 # Sphinx docs
 build/*
