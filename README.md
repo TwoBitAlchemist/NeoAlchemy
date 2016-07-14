@@ -1,6 +1,8 @@
 NeoAlchemy
 ==========
 
+[![Documentation Status](https://readthedocs.org/projects/neoalchemy/badge/?version=latest)](http://neoalchemy.readthedocs.io/en/latest/?badge=latest)
+
 NeoAlchemy is a SqlAlchemy-like tool for working with the Neo4J graph database
 in Python. It is intended to be very easy to use, and intuitively familiar to
 anyone who has used SqlAlchemy and/or the Cypher Query Language.
