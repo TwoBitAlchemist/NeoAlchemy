@@ -15,6 +15,7 @@ node_modules/
 typings/
 *.egg*
 *.cfg
+.coverage
 
 # Sphinx docs
 build/*
