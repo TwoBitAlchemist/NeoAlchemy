@@ -62,7 +62,13 @@ class Node(object):
             setattr(self, prop, kw.get(prop))
 
     def create(self, unique=False):
-        params = {'%s_n' % prop: getattr(self, prop)
-                  for prop in self.__nodetype__.schema}
         return self.graph.query(Create(self.__nodetype__, unique=unique),
-                                       **params)
+                                       **self.params)
+
+    def match(self):
+        return self.graph.query(Match(self.__nodetype__), **self.params)
+
+    @property
+    def params(self):
+        return {'%s_n' % prop: getattr(self, prop)
+                for prop in self.__nodetype__.schema}
