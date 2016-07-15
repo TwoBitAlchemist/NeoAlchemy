@@ -1,6 +1,6 @@
 from six import add_metaclass
 
-from ..cypher import Create
+from ..cypher import Create, Match
 from .base import NodeType, Property
 
 
@@ -63,10 +63,11 @@ class Node(object):
 
     def create(self, unique=False):
         return self.graph.query(Create(self.__nodetype__, unique=unique),
-                                       **self.params)
+                                **self.params)
 
     def match(self):
-        return self.graph.query(Match(self.__nodetype__), **self.params)
+        return self.graph.query(Match(self.__nodetype__).return_(), 
+                                **self.params)
 
     @property
     def params(self):
