@@ -12,7 +12,7 @@ def test_simple_labeled_node():
     # cannot reset label once created
     with pytest.raises(AttributeError):
         Node.LABEL = 'bob'
-    assert not str(Node)
+    assert not Node.schema
 
 
 def test_invalid_property():
@@ -27,7 +27,7 @@ def test_node_duplicate_property():
 
 def test_node_one_index():
     Person = NodeType('Person', Property('name', indexed=True))
-    assert str(Person) == 'CREATE INDEX ON :Person(name)'
+    assert Person.schema == ['INDEX ON :Person(name)']
     assert Person.name.indexed
     assert not Person.name.unique
     assert not Person.name.required
@@ -35,8 +35,8 @@ def test_node_one_index():
 
 def test_node_one_unique():
     Person = NodeType('Person', Property('SSN', unique=True))
-    assert str(Person) == ('CREATE CONSTRAINT ON (n:Person) '
-                           'ASSERT n.SSN IS UNIQUE')
+    assert Person.schema == ['CONSTRAINT ON ( person:Person ) '
+                             'ASSERT person.SSN IS UNIQUE']
     assert Person.SSN.indexed
     assert Person.SSN.unique
     assert not Person.SSN.required
@@ -44,8 +44,8 @@ def test_node_one_unique():
 
 def test_node_one_required():
     Person = NodeType('Person', Property('name', required=True))
-    assert str(Person) == ('CREATE CONSTRAINT ON (n:Person) '
-                           'ASSERT exists(n.name)')
+    assert Person.schema == ['CONSTRAINT ON ( person:Person ) '
+                             'ASSERT exists(person.name)']
     assert not Person.name.indexed
     assert not Person.name.unique
     assert Person.name.required
@@ -53,9 +53,9 @@ def test_node_one_required():
 
 def test_node_one_required_and_indexed():
     Person = NodeType('Person', Property('name', required=True, indexed=True))
-    assert str(Person) == ('CREATE INDEX ON :Person(name)\n'
-                           'CREATE CONSTRAINT ON (n:Person) '
-                           'ASSERT exists(n.name)')
+    assert Person.schema == ['INDEX ON :Person(name)',
+                             'CONSTRAINT ON ( person:Person ) '
+                             'ASSERT exists(person.name)']
     assert Person.name.indexed
     assert not Person.name.unique
     assert Person.name.required
@@ -63,10 +63,10 @@ def test_node_one_required_and_indexed():
 
 def test_node_one_required_and_unique():
     Person = NodeType('Person', Property('name', required=True, unique=True))
-    assert str(Person) == ('CREATE CONSTRAINT ON (n:Person) '
-                           'ASSERT n.name IS UNIQUE\n'
-                           'CREATE CONSTRAINT ON (n:Person) '
-                           'ASSERT exists(n.name)')
+    assert Person.schema == ['CONSTRAINT ON ( person:Person ) '
+                             'ASSERT person.name IS UNIQUE',
+                             'CONSTRAINT ON ( person:Person ) '
+                             'ASSERT exists(person.name)']
     assert Person.name.indexed
     assert Person.name.unique
     assert Person.name.required

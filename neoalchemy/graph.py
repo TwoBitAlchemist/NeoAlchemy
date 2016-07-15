@@ -9,20 +9,18 @@ from neo4j.v1 import GraphDatabase, basic_auth
 
 
 class QueryLog(OrderedDict):
-    MAX_LOG_SIZE = 100
+    MAX_SIZE = 100
 
-    def __init__(self, max_size=None, *args, **kw):
+    def __init__(self, *args, **kw):
         self.__log_line = 0
-        if max_size is not None:
-            self.__max_size = max_size
         super(QueryLog, self).__init__(*args, **kw)
 
     def __call__(self, query, params):
         line = self.__log_line
         LogLine = namedtuple('LogLine', ('query', 'params'))
         self[line] = LogLine(query=query, params=params)
-        if len(self) > self.MAX_LOG_SIZE:
-            self.pop(line - self.MAX_LOG_SIZE)
+        if len(self) > self.MAX_SIZE:
+            self.pop(line - self.MAX_SIZE)
         self.__log_line += 1
 
     def clear(self):
@@ -93,29 +91,19 @@ class Schema(object):
         self.__reflect = Reflect(graph)
         self.__schema = set()
 
-    def add(self, nodetype, overwrite=False):
+    def add(self, nodetype):
         """
-        Add a NodeType to the schema.
-
-        If nodetype is already in the schema, does nothing.
-        If nodetype is not in the schema, and not in the database, the
-            appropriate schema-creating statements will be emitted.
-        If nodetype is not in the schema, but is in the database, the schema
-            will only be written if overwrite is set, in which case the
-            existing schema (if any) will be dropped.
+        Add a NodeType to the schema, if not already present.
         """
         if nodetype.LABEL in self.__schema:
             return
 
-        statement = str(nodetype)
         self.__schema.add(nodetype.LABEL)
-        not_found = (statement.replace('CREATE ', '')
-                     not in self.indexes() + self.constraints())
-        if overwrite:
-            statement = '\n'.join((statement.replace('CREATE', 'DROP'),
-                                   statement))
-        if overwrite or not_found:
-            self.__graph.query(statement)
+        schema = self.indexes() + self.constraints()
+
+        for index_or_constraint in nodetype.schema:
+            if index_or_constraint not in schema:
+                self.__graph.query('CREATE ' + index_or_constraint)
 
     def constraints(self):
         """

@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from itertools import chain
 
 from .operations import OperatorInterface
 
@@ -24,6 +25,29 @@ class Property(OperatorInterface):
         self.__name = str(value)
 
     @property
+    def schema(self):
+        params = {
+            'label': self.label,
+            'lower_label': self.label.lower(),
+            'name': self.__name,
+        }
+
+        schema = []
+        if self.unique:
+            constraint = ('CONSTRAINT ON ( %(lower_label)s:%(label)s ) '
+                          'ASSERT %(lower_label)s.%(name)s IS UNIQUE')
+            schema.append(constraint % params)
+        elif self.indexed:
+            schema.append('INDEX ON :%(label)s(%(name)s)' % params)
+
+        if self.required:
+            constraint = ('CONSTRAINT ON ( %(lower_label)s:%(label)s ) '
+                          'ASSERT exists(%(lower_label)s.%(name)s)')
+            schema.append(constraint % params)
+
+        return schema
+
+    @property
     def value(self):
         return self.__value
 
@@ -35,34 +59,20 @@ class Property(OperatorInterface):
             value = self.type(value)
         self.__value = value
 
-    def __str__(self):
-        label, name = self.label, self.__name
-        schema = []
-        if self.unique:
-            schema.append('CREATE CONSTRAINT ON (n:%s) '
-                          'ASSERT n.%s IS UNIQUE' % (label, name))
-        elif self.indexed:
-            schema.append('CREATE INDEX ON :%s(%s)' % (label, name))
-
-        if self.required:
-            schema.append('CREATE CONSTRAINT ON (n:%s) '
-                          'ASSERT exists(n.%s)' % (label, name))
-        return '\n'.join(schema)
-
 
 class NodeType(object):
     def __init__(self, label, *properties, **kw):
         self.__labels = (label,) + tuple(kw.get('extra_labels', ()))
-        self.__schema = OrderedDict()
+        self.__properties = OrderedDict()
         for prop in properties:
             if not isinstance(prop, Property):
                 raise TypeError("Must be a Property object. "
                                 "'%s' given." % prop.__class__)
             prop.label = label
-            if prop.name in self.__schema:
+            if prop.name in self.__properties:
                 raise ValueError("Duplicate property found: '%s'" % prop.name)
 
-            self.__schema[prop.name] = prop
+            self.__properties[prop.name] = prop
 
     @property
     def LABEL(self):
@@ -74,13 +84,14 @@ class NodeType(object):
 
     @property
     def schema(self):
-        return self.__schema
+        return [s for p in self.__properties.values() for s in p.schema]
+
+    @property
+    def properties(self):
+        return self.__properties
 
     def __getattr__(self, attr):
         try:
-            return self.__schema[attr]
+            return self.__properties[attr]
         except KeyError:
             super().__getattribute__(attr)
-
-    def __str__(self):
-        return '\n'.join(filter(bool, map(str, self.__schema.values())))

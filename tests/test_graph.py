@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from neoalchemy import Graph
+from neoalchemy import Graph, NodeType, Property
 
 
 __TEST_LABEL__ = '__NEOALCHEMY_TEST__'
@@ -91,3 +91,45 @@ def test_query_and_delete_all():
     assert all_nodes[0][0]['name'] == 'Bob'
     graph.delete_all()
     assert not list(graph.query.all())
+
+
+@writes_required
+def test_query_log():
+    graph = test_graph
+    graph.query.log.MAX_SIZE = 3
+    graph.query.log.clear()
+    assert not graph.query.log
+    query = 'MATCH (n:%s) RETURN n' % __TEST_LABEL__
+    graph.query(query)
+    assert graph.query.log[0].query == query
+    assert not graph.query.log[0].params
+    with pytest.raises(KeyError):
+        graph.query.log[1]
+    graph.query(query)
+    assert graph.query.log[1].query == query
+    graph.query(query)
+    graph.query(query)
+    assert graph.query.log[3].query == query
+    with pytest.raises(KeyError):
+        graph.query.log[0]
+    # can't set anything but next line
+    with pytest.raises(KeyError):
+        graph.query.log[5] = 'something'
+    with pytest.raises(KeyError):
+        graph.query.log['hot dog'] = 'something'
+
+
+@writes_required
+def test_schema_add():
+    graph = test_graph
+    Person = NodeType('Person', Property('name', unique=True))
+    constraint = ('CONSTRAINT ON ( person:Person ) '
+                  'ASSERT person.name IS UNIQUE')
+    if constraint in graph.schema.update().constraints():
+        graph.query('DROP ' + constraint)
+    assert constraint not in graph.schema.update().ls
+    assert constraint in Person.schema
+    graph.schema.add(Person)
+    assert constraint in graph.schema.update().ls
+    # No error calling a second time
+    graph.schema.add(Person)

@@ -126,7 +126,7 @@ class CypherVerb(object):
     def _compile_params(self, **params):
         var = self._['var']
         self.params = {}
-        for prop_name, prop in self.nodetype.schema.items():
+        for prop_name, prop in self.nodetype.properties.items():
             param_key = '%s%s' % (prop_name, ('_%s' % var) if var else '')
             self.params[param_key] = params.get(prop_name, prop.default)
         return self
