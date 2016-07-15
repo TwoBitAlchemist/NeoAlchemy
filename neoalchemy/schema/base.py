@@ -11,7 +11,7 @@ class Property(OperatorInterface):
         self.indexed = self.unique or bool(indexed)
         self.required = bool(required)
         self.type = type
-        self.default = default
+        self.__value = self.default = default
 
     @property
     def name(self):
@@ -22,6 +22,18 @@ class Property(OperatorInterface):
         if self.__name is not None:
             raise AttributeError("Can't change Property name once set.")
         self.__name = str(value)
+
+    @property
+    def value(self):
+        return self.__value
+
+    @value.setter
+    def value(self, value):
+        if value is None:
+            value = self.default
+        else:
+            value = self.type(value)
+        self.__value = value
 
     def __str__(self):
         label, name = self.label, self.__name

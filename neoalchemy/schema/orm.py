@@ -7,7 +7,6 @@ from .base import NodeType, Property
 class PropertyDescriptor(object):
     def __init__(self, property_obj):
         self.__property = property_obj
-        self.__property.value = None
 
     def __get__(self, obj, type=None):
         if obj is None:
@@ -20,8 +19,6 @@ class PropertyDescriptor(object):
 
         if (self.__property.value is not None and
                 self.__property.value != value):
-            if value is not None:
-                value = self.__property.type(value)
             obj.__changed__[self.__property.name] = value
         self.__property.value = value
 
