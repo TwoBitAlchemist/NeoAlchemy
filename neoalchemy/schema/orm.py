@@ -66,8 +66,13 @@ class Node(object):
                                 **self.params)
 
     def match(self):
-        return self.graph.query(Match(self.__nodetype__).return_(), 
-                                **self.params)
+        match = Match(self.__nodetype__)
+        for param, value in self.params.items():
+            if value is None:
+                continue
+            param = getattr(self.__class__, param.rsplit('_', 1)[0])
+            match = match.where(param==value)
+        return list(self.graph.query(match.return_(), **self.params))[0]
 
     @property
     def params(self):
