@@ -91,14 +91,3 @@ def test_query_and_delete_all():
     assert all_nodes[0][0]['name'] == 'Bob'
     graph.delete_all()
     assert not list(graph.query.all())
-
-
-@writes_required
-def test_label_reflection():
-    graph = test_graph
-    graph.query('CREATE (test:%s)' % __TEST_LABEL__)
-    assert __TEST_LABEL__ in graph.schema.labels()
-    graph.query('MATCH (test:%s) DELETE test' % __TEST_LABEL__)
-    assert __TEST_LABEL__ in graph.schema.labels()
-    graph.schema.update()
-    assert __TEST_LABEL__ not in graph.schema.labels()

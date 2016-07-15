@@ -91,7 +91,7 @@ class Schema(object):
         self.__indexes = None
         self.__labels = None
         self.__reflect = Reflect(graph)
-        self.__schema = dict()
+        self.__schema = set()
 
     def add(self, nodetype, overwrite=False):
         """
@@ -108,11 +108,14 @@ class Schema(object):
             return
 
         statement = str(nodetype)
-        self.__schema[nodetype.LABEL] = statement
-        if overwrite or statement not in self.indexes() + self.constraints():
-            if overwrite:
-                self.__graph.query(str(nodetype).replace('CREATE', 'DROP'))
-            self.__graph.query(str(nodetype))
+        self.__schema.add(nodetype.LABEL)
+        not_found = (statement.replace('CREATE ', '')
+                     not in self.indexes() + self.constraints())
+        if overwrite:
+            statement = '\n'.join((statement.replace('CREATE', 'DROP'),
+                                   statement))
+        if overwrite or not_found:
+            self.__graph.query(statement)
 
     def constraints(self):
         """
@@ -150,13 +153,14 @@ class Schema(object):
     @property
     def ls(self):
         """Cypher statements for currently defined schema"""
-        return '\n'.join(filter(bool, map(str, self.__schema.values())))
+        return '\n'.join(self.indexes() + self.constraints())
 
     def update(self):
         """Refresh graph constraints, indexes, and labels"""
         self.__constraints = tuple(self.__reflect.constraints())
         self.__indexes = tuple(self.__reflect.indexes())
         self.__labels = tuple(self.__reflect.labels())
+        return self
 
 
 class Graph(GraphDatabase):
