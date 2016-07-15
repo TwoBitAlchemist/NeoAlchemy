@@ -15,6 +15,7 @@ class QueryLog(OrderedDict):
         self.__log_line = 0
         if max_size is not None:
             self.__max_size = max_size
+        super(QueryLog, self).__init__(*args, **kw)
 
     def __call__(self, query, params):
         line = self.__log_line
