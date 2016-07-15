@@ -5,7 +5,9 @@ python:
   - "3.4"
   - "3.5"
 # command to install dependencies
-install: pip install -r dev_requirements.txt
+install:
+    - pip install -r dev_requirements.txt
+    - pip install -e .
 # command to run tests
-script: coverage run --source=neoalchemy setup.py test
+script: py.test --cov=neoalchemy
 after_success: codecov
