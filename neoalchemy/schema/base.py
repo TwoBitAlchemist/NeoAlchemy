@@ -94,4 +94,4 @@ class NodeType(object):
         try:
             return self.__properties[attr]
         except KeyError:
-            super().__getattribute__(attr)
+            super(NodeType, self).__getattribute__(attr)
