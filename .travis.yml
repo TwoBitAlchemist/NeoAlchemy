@@ -10,4 +10,3 @@ install:
     - pip install -e .
 # command to run tests
 script: py.test --cov=neoalchemy
-after_success: codecov
