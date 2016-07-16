@@ -199,7 +199,7 @@ that state is easy to build up over time and as part of larger algorithms::
 
     match = Match(Person)
     # ... some code ...
-    match = match.where(Person.age=age)
+    match.where(Person.age=age)
     # ... more code...
     match.return_(ret_params)
 
