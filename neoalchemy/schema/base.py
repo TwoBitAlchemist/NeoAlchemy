@@ -13,7 +13,7 @@ class Property(OperatorInterface):
         self.required = bool(required)
         self.type = type
         self.default = default
-        self.value = self.__value = None
+        self.__value = self.value = None
 
     @property
     def name(self):
