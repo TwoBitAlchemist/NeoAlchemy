@@ -12,7 +12,8 @@ class Property(OperatorInterface):
         self.indexed = self.unique or bool(indexed)
         self.required = bool(required)
         self.type = type
-        self.__value = self.default = default
+        self.default = default
+        self.value = self.__value = None
 
     @property
     def name(self):
@@ -54,7 +55,7 @@ class Property(OperatorInterface):
     @value.setter
     def value(self, value):
         if value is None:
-            value = self.default
+            value = self.default() if callable(self.default) else self.default
         else:
             value = self.type(value)
         self.__value = value
