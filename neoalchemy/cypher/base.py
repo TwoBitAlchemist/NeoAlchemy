@@ -9,6 +9,11 @@ from neoalchemy.schema.operations import (CypherExpressionList,
 
 
 class VerbCollection(list):
+    def __init__(self, *args, **kw):
+        super(VerbCollection, self).__init__(*args, **kw)
+        for x in self:
+            del x._['return']
+
     def __and__(self, x):
         self.append(x)
         return self
@@ -48,10 +53,13 @@ class CypherVerb(object):
     def __init__(self, nodetype, var='n', **params):
         self.verb = self.__class__.__name__.upper()
 
-        if isinstance(nodetype, self.__class__):
+        try:
             self.nodetype = nodetype.nodetype
-        else:
-            self.nodetype = nodetype
+        except AttributeError:
+            try:
+                self.nodetype = nodetype.__nodetype__
+            except AttributeError:
+                self.nodetype = nodetype
 
         self._ = defaultdict(lambda: None)
         self.params = {}
@@ -128,7 +136,7 @@ class CypherVerb(object):
         self.params = {}
         for prop_name, prop in self.nodetype.properties.items():
             param_key = '%s%s' % (prop_name, ('_%s' % var) if var else '')
-            self.params[param_key] = params.get(prop_name, prop.default)
+            self.params[param_key] = params.get(prop_name, prop.value)
         return self
 
     def _parse_args(self, args):
@@ -188,11 +196,15 @@ class CypherVerb(object):
         self._['return'] = distinct + ', '.join(self._parse_args(args))
         return self
 
-    def set(self, property_, value, var=None):
-        expr = LogicalCypherExpression('=', value,
-                                       property_name=property_.name)
-        expr.node_key = var
-        self._['set'] += expr
+    def set(self, var=None, **params):
+        for prop_name, value in params.items():
+            try:
+                property_ = self.nodetype.properties[prop_name]
+            except KeyError:
+                continue
+            expr = LogicalCypherExpression('=', value, property_)
+            expr.node_key = var
+            self._['set'] += expr
         return self
 
     def skip(self, value):

@@ -13,20 +13,36 @@ def test_create_nodetype_no_props():
     assert not create.params
 
 
+def test_create_unique():
+    user = NodeType('User')
+    create = Create(user, unique=True)
+    assert str(create) == 'CREATE UNIQUE (n:User)'
+    assert not create.params
+
+
 def test_create_nodetype_one_prop():
     user = NodeType('User', Property('name'))
     create = Create(user)
     assert str(create) == 'CREATE (n:User {name: {name_n}})'
     assert len(create.params) == 1
-    assert 'name_n' in create.params
+    assert create.params['name_n'] is None
+    create = Create(user).set(name='Frank')
+    assert str(create) == 'CREATE (n:User) SET n.name = {name_n}'
+    assert len(create.params) == 1
+    assert create.params['name_n'] == 'Frank'
 
 
 def test_create_nodetype_two_props():
-    user = NodeType('User', Property('name'), Property('age'))
+    user = NodeType('User', Property('name'), Property('age', type=int))
     create = Create(user)
     assert len(create.params) == 2
-    assert 'name_n' in create.params
-    assert 'age_n' in create.params
+    assert create.params['name_n'] is None
+    assert create.params['age_n'] is None
+    create.set(name='Frank').compile()
+    assert create.params['name_n'] == 'Frank'
+    assert create.params['age_n'] is None
+    create.set(age='29').compile()
+    assert create.params['age_n'] == 29
 
 
 def test_create_nodetype_two_labels():
@@ -66,13 +82,40 @@ def test_multiple_named_params():
     assert 'name_m' in create.params
 
 
-def test_match_with_where_expressions():
+def test_full_match():
     Person = NodeType('Person', Property('name'))
     match = (Match(Person, 'n')['KNOWS'](Person, 'm')
                .where(Person.name=='Alice', 'm'))
     assert str(match) == ('MATCH (n:Person)-[r1:KNOWS]->(m:Person)'
-                          " WHERE m.name = {name_m}")
+                          ' WHERE m.name = {name_m}')
     assert match.params['name_m'] == 'Alice'
+    match.return_().order_by({'n': 'name'}).skip(1).limit(1)
+    assert str(match) == '\n'.join(('MATCH (n:Person)-[r1:KNOWS]->(m:Person)'
+                                    ' WHERE m.name = {name_m}',
+                                    'RETURN * ORDER BY n.name ASC '
+                                    'SKIP 1 LIMIT 1'))
+    assert match.params['name_m'] == 'Alice'
+
+
+def test_return():
+    Person = NodeType('Person')
+    match = Match(Person)
+    query = 'MATCH (n:Person)'
+    assert str(match.return_()) == '\n'.join((query, 'RETURN *'))
+    assert str(match.return_('n')) == '\n'.join((query, 'RETURN n'))
+    match &= Match(Person, 'm')
+    query = '\n'.join((query, 'MATCH (m:Person)'))
+    assert str(match.return_(['n', 'm'])) == '\n'.join((query, 'RETURN n, m'))
+    assert str(match.return_({'n': 'name'})) == '\n'.join((query,
+                                                           'RETURN n.name'))
+    assert (str(match.return_({'n': ['x', 'y']})) == 
+            '\n'.join((query, 'RETURN n.x, n.y')))
+    try:
+        assert (str(match.return_({'m': 'x', 'n': 'y'})) == 
+                '\n'.join((query, 'RETURN n.y, m.x')))
+    except AssertionError:
+        assert (str(match.return_({'m': 'x', 'n': 'y'})) == 
+                '\n'.join((query, 'RETURN m.x, n.y')))
 
 
 def test_matching_super_simple_stuff():
@@ -130,12 +173,12 @@ def test_complex_logical_cypher_expressions():
     assert match.params == {'name_n': 'Alice', 'hair_color_n': 'red'}
 
     Person = NodeType('Person', Property('name'), Property('hair_color'),
-                      Property('age'))
+                      Property('age', type=int))
     expected_match += ' AND n.age = {age_n}'
     match = (Match(Person)
                 .where((Person.name=='Alice') &
                        (Person.hair_color=='red') &
-                       (Person.age==29)))
+                       (Person.age=='29')))
     assert str(match) == expected_match
     assert match.params == {'name_n': 'Alice', 'hair_color_n': 'red',
                             'age_n': 29}
@@ -167,7 +210,7 @@ def test_complex_logical_cypher_expressions():
 
 
 def test_arithmetic_cypher_expressions():
-    Person = NodeType('Person', Property('age'))
+    Person = NodeType('Person', Property('age', type=int))
 
     match = Match(Person).where((Person.age + 5) == 23)
     assert str(match) == 'MATCH (n:Person) WHERE n.age + {param0} = {param1}'
