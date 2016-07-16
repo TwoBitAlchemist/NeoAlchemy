@@ -56,7 +56,7 @@ class Property(OperatorInterface):
     def value(self, value):
         if value is None:
             value = self.default() if callable(self.default) else self.default
-        else:
+        if value is not None:
             value = self.type(value)
         self.__value = value
 

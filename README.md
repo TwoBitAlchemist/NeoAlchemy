@@ -27,19 +27,33 @@ Low-Level QueryBuilder API
 --------------------------
 
 ``` python
+import uuid
+
 from neoalchemy import NodeType, Property, Graph
+from neoalchemy.cypher import Create
+
+def valid_uuid(id_):
+    return str(uuid.UUID(str(id_)))
 
 graph = Graph()
 
-user = NodeType('User',  # primary label
-    Property('id', unique=True, type=int),
-    Property('name', indexed=True),
-    Property('fullname', required=True)
+Person = NodeType('Person',  # primary label
+    Property('uuid', unique=True, type=valid_uuid, default=uuid.uuid4),
+    Property('real_name', indexed=True),
+    Property('screen_name', indexed=True, type=str.lower),
+    Property('age', type=int)
 )
 
 # Emit schema-generating DDL
-graph.schema.add(user)
+# graph.schema.add(Person)
+
+create = Create(Person).set(real_name='Alison', screen_name='Ali42')
+create.set(age=29).compile()
+
+graph.query(create, **create.params)
 ```
+
+[Learn more about the QueryBuilder API][5].
 
 
 High-Level Schema ORM
@@ -64,3 +78,4 @@ class User(Node):
 [2]: https://neo4j.com/developer/python/
 [3]: https://github.com/TwoBitAlchemist/NeoAlchemy/issues/new
 [4]: https://github.com/TwoBitAlchemist/NeoAlchemy
+[5]: http://neoalchemy.readthedocs.io/en/latest/query-builder.html

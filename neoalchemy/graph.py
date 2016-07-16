@@ -2,39 +2,21 @@
 A thin wrapper around the Neo4J Bolt driver's GraphDatabase class
 providing a convenient auto-connection during initialization.
 """
-from collections import namedtuple, OrderedDict
+from collections import deque, namedtuple
 import warnings
 
 from neo4j.v1 import GraphDatabase, basic_auth
 
 
-class QueryLog(OrderedDict):
+class QueryLog(deque):
     MAX_SIZE = 100
+    LogLine = namedtuple('LogLine', ('query', 'params'))
 
     def __init__(self, *args, **kw):
-        self.__log_line = 0
-        super(QueryLog, self).__init__(*args, **kw)
+        super(QueryLog, self).__init__(maxlen=self.MAX_SIZE, *args, **kw)
 
     def __call__(self, query, params):
-        line = self.__log_line
-        LogLine = namedtuple('LogLine', ('query', 'params'))
-        self[line] = LogLine(query=query, params=params)
-        if len(self) > self.MAX_SIZE:
-            self.pop(line - self.MAX_SIZE)
-        self.__log_line += 1
-
-    def clear(self):
-        self.__log_line = 0
-        super(QueryLog, self).clear()
-
-    def __iter__(self):
-        return iter(self.values())
-
-    def __setitem__(self, key, value):
-        if key != self.__log_line:
-            raise KeyError('%s not writeable at '
-                           'line [%s].' % (self.__class__.__name__, key))
-        super(QueryLog, self).__setitem__(key, value)
+        self.append(self.LogLine(query=query, params=params))
 
 
 class Query(object):

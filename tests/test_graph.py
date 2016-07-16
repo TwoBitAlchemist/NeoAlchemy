@@ -1,35 +1,9 @@
 """Graph (Connection Class) Tests"""
-import os
-
 import pytest
 
 from neoalchemy import Graph, NodeType, Property
-
-
-__TEST_LABEL__ = '__NEOALCHEMY_TEST__'
-
-
-TEST_NEO_URL = os.environ.get('TEST_NEOALCHEMY_URL', None)
-TEST_NEO_USER = os.environ.get('TEST_NEOALCHEMY_USER', None)
-TEST_NEO_PASS = os.environ.get('TEST_NEOALCHEMY_PASS', None)
-CAN_CLEAR_GRAPH = bool(os.environ.get('TEST_NEOALCHEMY_GRAPH_FULL_ACCESS', 0))
-CAN_WRITE_GRAPH = (CAN_CLEAR_GRAPH or
-                   bool(os.environ.get('TEST_NEOALCHEMY_GRAPH_ACCESS', 0)))
-
-
-GRAPH_CLEARS_DISABLED_MSG = ("Graph clearing disabled. Enable with "
-                             "`export TEST_NEOALCHEMY_GRAPH_FULL_ACCESS=1`\n"
-                             "WARNING: THIS WILL DELETE YOUR ENTIRE GRAPH!!!")
-GRAPH_WRITES_DISABLED_MSG = ("Graph writes disabled. Enable with "
-                             "`export TEST_NEOALCHEMY_GRAPH_ACCESS=1`")
-
-clears_graph = pytest.mark.skipif(not CAN_CLEAR_GRAPH,
-                                  reason=GRAPH_CLEARS_DISABLED_MSG)
-writes_required = pytest.mark.skipif(not CAN_WRITE_GRAPH,
-                                     reason=GRAPH_WRITES_DISABLED_MSG)
-
-
-test_graph = Graph(TEST_NEO_URL, user=TEST_NEO_USER, password=TEST_NEO_PASS)
+from tests.graph_test_settings import *
+from tests.graph_test_settings import __TEST_LABEL__
 
 
 def test_default_connection():
@@ -91,45 +65,3 @@ def test_query_and_delete_all():
     assert all_nodes[0][0]['name'] == 'Bob'
     graph.delete_all()
     assert not list(graph.query.all())
-
-
-@writes_required
-def test_query_log():
-    graph = test_graph
-    graph.query.log.MAX_SIZE = 3
-    graph.query.log.clear()
-    assert not graph.query.log
-    query = 'MATCH (n:%s) RETURN n' % __TEST_LABEL__
-    graph.query(query)
-    assert graph.query.log[0].query == query
-    assert not graph.query.log[0].params
-    with pytest.raises(KeyError):
-        graph.query.log[1]
-    graph.query(query)
-    assert graph.query.log[1].query == query
-    graph.query(query)
-    graph.query(query)
-    assert graph.query.log[3].query == query
-    with pytest.raises(KeyError):
-        graph.query.log[0]
-    # can't set anything but next line
-    with pytest.raises(KeyError):
-        graph.query.log[5] = 'something'
-    with pytest.raises(KeyError):
-        graph.query.log['hot dog'] = 'something'
-
-
-@writes_required
-def test_schema_add():
-    graph = test_graph
-    Person = NodeType('Person', Property('name', unique=True))
-    constraint = ('CONSTRAINT ON ( person:Person ) '
-                  'ASSERT person.name IS UNIQUE')
-    if constraint in graph.schema.update().constraints():
-        graph.query('DROP ' + constraint)
-    assert constraint not in graph.schema.update().ls
-    assert constraint in Person.schema
-    graph.schema.add(Person)
-    assert constraint in graph.schema.update().ls
-    # No error calling a second time
-    graph.schema.add(Person)

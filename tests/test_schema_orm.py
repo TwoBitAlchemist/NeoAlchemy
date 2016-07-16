@@ -15,7 +15,7 @@ def test_property_type():
     def YYYYMMDD(date_str):
         if date_str is None:
             return
-        return datetime.strptime(str(date_str), '%Y-%m-%d')
+        return datetime.strptime(str(date_str), '%Y-%m-%d').date()
 
     class MyNode(Node):
         date = Property(type=YYYYMMDD)
@@ -53,7 +53,7 @@ def test_property_default():
     def YYYYMMDD(date_str):
         if date_str is None:
             return
-        return datetime.strptime(str(date_str), '%Y-%m-%d')
+        return datetime.strptime(str(date_str), '%Y-%m-%d').date()
 
     class MyNode(Node):
         date = Property(type=YYYYMMDD, default=date.today)
