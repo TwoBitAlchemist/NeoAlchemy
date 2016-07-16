@@ -8,7 +8,7 @@ setup(
     name='NeoAlchemy',
     version='0.8.0b',
     license='MIT',
-    url='',
+    url='https://neoalchemy.readthedocs.io/',
 
     description=('A microframework for Neo4J inspired by SQLAlchemy.'),
     long_description=long_desc,
