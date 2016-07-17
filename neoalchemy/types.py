@@ -1,5 +1,13 @@
-from dateutil.parser import parse as parse_date
+import dateutil.parser
 import uuid
+
+
+def parse_date(date_str):
+    try:
+        return dateutil.parser.parse(str(date_str))
+    except:
+        raise ValueError("Cannot parse %s as date." %
+                         date_str.__class__.__name__)
 
 
 def valid_uuid(id_):
@@ -13,11 +21,11 @@ def isodate(date_):
         return
 
     fmt = '%Y-%m-%d'
-    return parse_date(str(date_)).date().isoformat()
+    return parse_date(date_).date().isoformat()
 
 
 def isodatetime(datetime_):
     if datetime_ is None:
         return
 
-    return parse_date(str(datetime_)).isoformat()
+    return parse_date(datetime_).isoformat()

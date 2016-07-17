@@ -22,11 +22,9 @@ def test_property_type():
     assert my_node.uuid is None
 
     with pytest.raises(ValueError):
-        my_node.date = 123
+        my_node.date = 'rutabaga'
     my_node.date = '1987-07-12'
-    assert my_node.date.year == 1987
-    assert my_node.date.month == 7
-    assert my_node.date.day == 12
+    assert my_node.date == '1987-07-12'
     my_node.string = 1
     assert my_node.string == '1'
     my_node.integer = '1'
