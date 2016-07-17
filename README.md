@@ -45,7 +45,7 @@ Person = NodeType('Person',  # primary label
 )
 
 # Emit schema-generating DDL
-# graph.schema.add(Person)
+graph.schema.add(Person)
 
 create = Create(Person).set(real_name='Alison', screen_name='Ali42')
 create.set(age=29).compile()
