@@ -60,7 +60,7 @@ High-Level Schema ORM
 ``` python
 from neoalchemy import Node, Property, Graph
 
-class User(Node):
+class Person(Node):
     graph = Graph()
 
     uuid = Property(unique=True, type=valid_uuid, default=uuid.uuid4),
@@ -72,9 +72,12 @@ class User(Node):
 # No user action required
 ```
 
+[Learn more about the Schema ORM][6].
+
 
 [1]: https://pypi.python.org/pypi
 [2]: https://neo4j.com/developer/python/
 [3]: https://github.com/TwoBitAlchemist/NeoAlchemy/issues/new
 [4]: https://github.com/TwoBitAlchemist/NeoAlchemy
 [5]: http://neoalchemy.readthedocs.io/en/latest/query-builder.html
+[6]: http://neoalchemy.readthedocs.io/en/latest/schema-ORM.html
