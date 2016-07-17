@@ -10,8 +10,9 @@ Installation
 
 NeoAlchemy is available on `PyPI`_, so it can be installed normally using ``pip
 install neoalchemy``. NeoAlchemy is built on top of the `official Neo4J Python
-driver`_, and that is its only dependency. If you install from PyPI, this will
-automatically be installed alongside it.
+driver`_. If you install from PyPI, this will automatically be installed
+alongside it. You can also install the dependencies using ``pip install -r
+requirements.txt``.
 
 `Questions, support requests, comments`_, and `contributions`_ should be
 directed to GitHub accordingly.

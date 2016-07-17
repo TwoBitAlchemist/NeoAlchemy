@@ -1,4 +1,4 @@
-from datetime import datetime
+from dateutil.parser import parse as parse_date
 import uuid
 
 
@@ -8,7 +8,16 @@ def valid_uuid(id_):
     return str(uuid.UUID(str(id_)))
 
 
-def isodate(date_str):
-    if date_str is None:
+def isodate(date_):
+    if date_ is None:
         return
-    return datetime.strptime(str(date_str), '%Y-%m-%d').date()
+
+    fmt = '%Y-%m-%d'
+    return parse_date(str(date_)).date().isoformat()
+
+
+def isodatetime(datetime_):
+    if datetime_ is None:
+        return
+
+    return parse_date(str(datetime_)).isoformat()
