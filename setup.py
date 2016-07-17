@@ -30,6 +30,7 @@ setup(
     ],
 
     install_requires=[
+        'python-dateutil',
         'neo4j-driver',
         'six',
     ],
