@@ -59,6 +59,7 @@ High-Level Schema ORM
 
 ``` python
 from neoalchemy import Node, Property, Graph
+from neoalchemy.types import valid_uuid
 
 class Person(Node):
     graph = Graph()
