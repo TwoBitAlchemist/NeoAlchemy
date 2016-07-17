@@ -28,25 +28,28 @@ class PropertyDescriptor(object):
 
 class NodeMeta(type):
     def __new__(mcs, class_name, bases, attrs):
-        labels = [attrs.get('LABEL', class_name)]
-        for base in bases:
-            try:
-                labels.append(base.LABEL)
-            except AttributeError:
-                pass
+        if class_name != 'Node':
+            labels = []
+            properties = []
+            for base in bases:
+                try:
+                    labels.extend(base.__nodetype__.labels)
+                    properties.extend(base.__nodetype__.properties.values())
+                except AttributeError:
+                    pass
+            labels.append(attrs.get('LABEL', class_name))
 
-        properties = []
-        for prop_name, prop in attrs.items():
-            if isinstance(prop, Property):
-                if prop.name is None:
-                    prop.name = prop_name
-                properties.append(prop)
-                attrs[prop_name] = PropertyDescriptor(prop)
-        attrs['__nodetype__'] = NodeType(labels[0], *properties,
-                                         extra_labels=labels[1:])
+            for prop_name, prop in attrs.items():
+                if isinstance(prop, Property):
+                    if prop.name is None:
+                        prop.name = prop_name
+                    properties.append(prop)
+                    attrs[prop_name] = PropertyDescriptor(prop)
+            attrs['__nodetype__'] = NodeType(labels[0], *properties,
+                                             extra_labels=labels[1:])
 
-        if attrs.get('graph') is not None:
-            attrs['graph'].schema.add(attrs['__nodetype__'])
+            if attrs.get('graph') is not None:
+                attrs['graph'].schema.add(attrs['__nodetype__'])
 
         return super(NodeMeta, mcs).__new__(mcs, class_name, bases, attrs)
 
