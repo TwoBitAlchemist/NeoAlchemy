@@ -12,7 +12,7 @@ class VerbCollection(list):
     def __init__(self, *args, **kw):
         super(VerbCollection, self).__init__(*args, **kw)
         for x in self:
-            del x._['return']
+            x._['return'] = None
 
     def __and__(self, x):
         self.append(x)
