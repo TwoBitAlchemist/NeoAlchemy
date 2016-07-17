@@ -31,9 +31,7 @@ import uuid
 
 from neoalchemy import NodeType, Property, Graph
 from neoalchemy.cypher import Create
-
-def valid_uuid(id_):
-    return str(uuid.UUID(str(id_)))
+from neoalchemy.types import valid_uuid
 
 graph = Graph()
 
@@ -65,9 +63,10 @@ from neoalchemy import Node, Property, Graph
 class User(Node):
     graph = Graph()
 
-    id = Property(unique=True, type=int)
-    name = Property(indexed=True)
-    fullname = Property(required=True)
+    uuid = Property(unique=True, type=valid_uuid, default=uuid.uuid4),
+    real_name = Property(indexed=True),
+    screen_name = Property(indexed=True, type=str.lower),
+    age = Property(type=int)
 
 # Cypher schema generation emitted automatically
 # No user action required

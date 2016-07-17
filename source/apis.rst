@@ -43,12 +43,15 @@ laying out the empty table.
 
 The same thing in NeoAlchemy looks like this::
 
+    import uuid
+
     from neoalchemy import NodeType, Property, Graph
+    from neoalchemy.types import valid_uuid
 
     graph = Graph()
 
     user = NodeType('User',  # primary label
-        Property('id', unique=True, type=int),
+        Property('uuid', unique=True, type=valid_uuid, default=uuid.uuid4),
         Property('name', indexed=True),
         Property('fullname', required=True)
     )
@@ -95,12 +98,15 @@ map metadata to the database transparently. It is compared below to
 
 The same thing in NeoAlchemy looks like this::
 
+    import uuid
+
     from neoalchemy import Node, Property, Graph
+    from neoalchemy.types import valid_uuid
 
     class User(Node):
         graph = Graph()
 
-        id = Property(unique=True, type=int)
+        uuid = Property(unique=True, type=valid_uuid, default=uuid.uuid4)
         name = Property(indexed=True)
         fullname = Property(required=True)
 
