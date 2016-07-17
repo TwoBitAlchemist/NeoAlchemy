@@ -66,9 +66,9 @@ from neoalchemy.types import valid_uuid
 class Person(Node):
     graph = Graph()
 
-    uuid = Property(unique=True, type=valid_uuid, default=uuid.uuid4),
-    real_name = Property(indexed=True),
-    screen_name = Property(indexed=True, type=str.lower),
+    uuid = Property(unique=True, type=valid_uuid, default=uuid.uuid4)
+    real_name = Property(indexed=True)
+    screen_name = Property(indexed=True, type=str.lower)
     age = Property(type=int)
 
 # Cypher schema generation emitted automatically

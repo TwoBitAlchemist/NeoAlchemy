@@ -55,7 +55,7 @@ class NodeMeta(type):
 class Node(object):
     def __init__(self, **kw):
         self.__changed__ = {}
-        for prop in self.__nodetype__.schema:
+        for prop in self.__nodetype__.properties:
             setattr(self, prop, kw.get(prop))
 
     def create(self, unique=False):
@@ -74,4 +74,4 @@ class Node(object):
     @property
     def params(self):
         return {'%s_n' % prop: getattr(self, prop)
-                for prop in self.__nodetype__.schema}
+                for prop in self.__nodetype__.properties}
