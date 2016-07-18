@@ -1,7 +1,14 @@
 from setuptools import setup
 
-with open('README.md') as readme:
-    long_desc = readme.read()
+
+long_desc = """
+NeoAlchemy is a SqlAlchemy-like tool for working with the Neo4J graph database
+in Python. It is intended to be very easy to use, and intuitively familiar to
+anyone who has used SqlAlchemy and/or the Cypher Query Language.
+
+NeoAlchemy is built on top of the Neo4J Bolt driver and only supports Neo4J
+3.0+ connected over the Bolt protocol. It supports Python 2.7 and 3.3+.
+"""
 
 
 setup(
