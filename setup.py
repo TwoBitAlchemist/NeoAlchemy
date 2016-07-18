@@ -12,17 +12,19 @@ NeoAlchemy is built on top of the Neo4J Bolt driver and only supports Neo4J
 
 
 setup(
-    name='NeoAlchemy',
-    version='0.8.0b',
+    name='neoalchemy',
+    packages=['neoalchemy'],
+    version='0.8.0-beta.5',
     license='MIT',
-    url='https://neoalchemy.readthedocs.io/',
 
     description=('A microframework for Neo4J inspired by SQLAlchemy.'),
-    long_description=long_desc,
-    keywords='Neo4J Graph Database',
+    keywords=['neo4j', 'graph', 'database', 'cypher', 'ORM', 'OGM'],
 
     author='Two-Bit Alchemist',
     author_email='seregon@gmail.com',
+
+    url='https://github.com/twobitalchemist/neoalchemy',
+    download_url='https://github.com/twobitalchemist/neoalchemy/tarball/0.8.0b',
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
@@ -40,7 +42,5 @@ setup(
         'python-dateutil',
         'neo4j-driver',
         'six',
-    ],
-    setup_requires=['pytest-runner'],
-    tests_require=['pytest']
+    ]
 )
