@@ -234,7 +234,6 @@ class CypherVerb(object):
         return self
 
     def __getitem__(self, rel):
-        self.compile()
         self._['relations'].append(Relation(rel))
         return self
 
