@@ -13,7 +13,7 @@ NeoAlchemy is built on top of the Neo4J Bolt driver and only supports Neo4J
 
 setup(
     name='NeoAlchemy',
-    version='0.8.0b',
+    version='0.8.0b1',
     license='MIT',
     url='https://neoalchemy.readthedocs.io/',
 
