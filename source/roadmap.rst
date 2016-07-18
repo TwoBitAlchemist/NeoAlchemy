@@ -17,7 +17,7 @@ RoadMap to 1.0
 
   - QueryBuilder :py:class:`~neoalchemy.cypher.Merge` support for
     ``ON CREATE``, ``ON MATCH``
-  - :py:meth:`neoalchemy.Node.merge`
+  - :py:meth:`neoalchemy.Node.match` / :py:meth:`neoalchemy.Node.merge`
   - Schema ORM Basic Relation support
   - Smarter queries
 
