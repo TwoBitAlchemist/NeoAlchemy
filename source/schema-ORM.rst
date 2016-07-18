@@ -82,16 +82,6 @@ node with its currently set values.
     removing it. This is a limitation of Cypher.
 
 
------
-Match
------
-
-Likewise, you can set the values to a desired configuration and read the
-corresponding node from the graph as follows::
-
-    person.match()
-
-
 .. _metaclass: https://stackoverflow.com/q/100003/
 .. _Flask: http://flask.pocoo.org/
 .. _the Neo4J Docs: http://neo4j.com/docs/developer-manual/current/#graphdb-neo4j-schema-indexes
