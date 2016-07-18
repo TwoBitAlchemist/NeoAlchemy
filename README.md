@@ -2,6 +2,7 @@ NeoAlchemy
 ==========
 
 [![Documentation Status](https://readthedocs.org/projects/neoalchemy/badge/?version=latest)](http://neoalchemy.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/neoalchemy/badge/?version=0.8.0b)](http://neoalchemy.readthedocs.io/en/0.8.0b/?badge=0.8.0b)
 [![Build Status](https://travis-ci.org/TwoBitAlchemist/NeoAlchemy.svg?branch=master)](https://travis-ci.org/TwoBitAlchemist/NeoAlchemy)
 [![codecov](https://codecov.io/gh/TwoBitAlchemist/NeoAlchemy/branch/master/graph/badge.svg)](https://codecov.io/gh/TwoBitAlchemist/NeoAlchemy)
 
