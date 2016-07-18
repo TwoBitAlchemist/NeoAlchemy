@@ -1,28 +1,20 @@
 from setuptools import setup
 
 
-long_desc = """
-NeoAlchemy is a SqlAlchemy-like tool for working with the Neo4J graph database
-in Python. It is intended to be very easy to use, and intuitively familiar to
-anyone who has used SqlAlchemy and/or the Cypher Query Language.
-
-NeoAlchemy is built on top of the Neo4J Bolt driver and only supports Neo4J
-3.0+ connected over the Bolt protocol. It supports Python 2.7 and 3.3+.
-"""
-
-
 setup(
-    name='NeoAlchemy',
-    version='0.8.0b1',
+    name='neoalchemy',
+    packages=['neoalchemy'],
+    version='0.8.0-beta.2',
     license='MIT',
-    url='https://neoalchemy.readthedocs.io/',
 
     description=('A microframework for Neo4J inspired by SQLAlchemy.'),
-    long_description=long_desc,
-    keywords='Neo4J Graph Database',
+    keywords=['neo4j', 'graph', 'database', 'cypher', 'ORM', 'OGM'],
 
     author='Two-Bit Alchemist',
     author_email='seregon@gmail.com',
+
+    url='https://github.com/twobitalchemist/neoalchemy',
+    download_url='https://github.com/twobitalchemist/neoalchemy/tarball/0.1',
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[

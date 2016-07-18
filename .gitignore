@@ -23,7 +23,6 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-.pypirc
 pyvenv.cfg
 
 # PyInstaller
