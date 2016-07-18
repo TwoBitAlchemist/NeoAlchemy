@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
     name='neoalchemy',
     packages=['neoalchemy'],
-    version='0.8.0-beta.5',
+    version='0.8.0-beta.6',
     license='MIT',
 
     description=('A microframework for Neo4J inspired by SQLAlchemy.'),
