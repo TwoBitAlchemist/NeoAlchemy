@@ -1,9 +1,9 @@
 NeoAlchemy
 ==========
 
-[![Documentation Status](https://readthedocs.org/projects/neoalchemy/badge/?version=0.8.0b)](http://neoalchemy.readthedocs.io/en/0.8.0b/?badge=0.8.0b)
-[![Build Status](https://travis-ci.org/TwoBitAlchemist/NeoAlchemy.svg?branch=master)](https://travis-ci.org/TwoBitAlchemist/NeoAlchemy)
-[![codecov](https://codecov.io/gh/TwoBitAlchemist/NeoAlchemy/branch/master/graph/badge.svg)](https://codecov.io/gh/TwoBitAlchemist/NeoAlchemy)
+[![Docs for 0.8.0b](https://readthedocs.org/projects/neoalchemy/badge/?version=0.8.0b)](http://neoalchemy.readthedocs.io/en/0.8.0b/?badge=0.8.0b)
+[![Latest Build Status](https://travis-ci.org/TwoBitAlchemist/NeoAlchemy.svg?branch=0.8.0b)](https://travis-ci.org/TwoBitAlchemist/NeoAlchemy)
+[![Codecov.io Report](https://codecov.io/gh/TwoBitAlchemist/NeoAlchemy/branch/0.8.0b/graph/badge.svg)](https://codecov.io/gh/TwoBitAlchemist/NeoAlchemy)
 
 NeoAlchemy is a SqlAlchemy-like tool for working with the Neo4J graph database
 in Python. It is intended to be very easy to use, and intuitively familiar to
@@ -78,10 +78,9 @@ class Person(Node):
 
 [Learn more about the Schema ORM][6].
 
-
-[1]: https://pypi.python.org/pypi
+[1]: https://pypi.python.org/pypi/neoalchemy
 [2]: https://neo4j.com/developer/python/
 [3]: https://github.com/TwoBitAlchemist/NeoAlchemy/issues/new
 [4]: https://github.com/TwoBitAlchemist/NeoAlchemy
-[5]: http://neoalchemy.readthedocs.io/en/latest/query-builder.html
-[6]: http://neoalchemy.readthedocs.io/en/latest/schema-ORM.html
+[5]: http://neoalchemy.readthedocs.io/en/0.8.0b/query-builder.html
+[6]: http://neoalchemy.readthedocs.io/en/0.8.0b/schema-ORM.html
