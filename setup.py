@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 long_desc = """
@@ -13,8 +13,8 @@ NeoAlchemy is built on top of the Neo4J Bolt driver and only supports Neo4J
 
 setup(
     name='neoalchemy',
-    packages=['neoalchemy'],
-    version='0.8.0-beta.5',
+    packages=find_packages(),
+    version='0.8.0-beta.7',
     license='MIT',
 
     description=('A microframework for Neo4J inspired by SQLAlchemy.'),
