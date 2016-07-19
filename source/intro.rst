@@ -55,7 +55,7 @@ You can also pass the username and password in separately if you like::
     means that only Neo4J version 3.0 or higher is supported.
 
 
-.. _PyPI: https://pypi.python.org/pypi
+.. _PyPI: https://pypi.python.org/pypi/neoalchemy
 .. _official Neo4J Python driver: https://neo4j.com/developer/python/
 .. _Questions, support requests, comments: https://github.com/TwoBitAlchemist/NeoAlchemy/issues/new
 .. _contributions: https://github.com/TwoBitAlchemist/NeoAlchemy
