@@ -1,10 +1,10 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 setup(
     name='neoalchemy',
-    packages=['neoalchemy'],
-    version='0.8.0-beta.6',
+    packages=find_packages(),
+    version='0.8.0-beta.7',
     license='MIT',
 
     description=('A microframework for Neo4J inspired by SQLAlchemy.'),
