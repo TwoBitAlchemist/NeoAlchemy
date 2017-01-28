@@ -5,7 +5,7 @@ import uuid
 import pytest
 
 from neoalchemy import Node, Property
-from neoalchemy.types import valid_uuid, isodate
+from neoalchemy.types import isodate, UUID
 
 
 def test_property_type():
@@ -13,7 +13,7 @@ def test_property_type():
         date = Property(type=isodate)
         string = Property()
         integer = Property(type=int)
-        uuid = Property(type=valid_uuid)
+        uuid = Property(type=UUID)
 
     my_node = MyNode()
     assert my_node.date is None
@@ -38,9 +38,9 @@ def test_property_default():
     class MyNode(Node):
         date = Property(type=isodate, default=date.today)
         integer = Property(type=int, default=14)
-        uuid = Property(type=valid_uuid, default=uuid.uuid4)
+        uuid = Property(type=UUID, default=uuid.uuid4)
 
     my_node = MyNode()
     assert isodate(my_node.date)
     assert my_node.integer == 14
-    assert valid_uuid(my_node.uuid)
+    assert UUID(my_node.uuid)
