@@ -1,7 +1,8 @@
 from six import add_metaclass
 
-from ..cypher import Create, Match
-from .base import NodeType, Property
+from .base import Property
+from .cypher import Create, Match
+from .primitives import Node
 
 
 class PropertyDescriptor(object):
@@ -45,7 +46,7 @@ class NodeMeta(type):
                         prop.name = prop_name
                     properties.append(prop)
                     attrs[prop_name] = PropertyDescriptor(prop)
-            attrs['__nodetype__'] = NodeType(labels[0], *properties,
+            attrs['__nodetype__'] = Node(labels[0], *properties,
                                              extra_labels=labels[1:])
 
             if attrs.get('graph') is not None:
@@ -55,7 +56,7 @@ class NodeMeta(type):
 
 
 @add_metaclass(NodeMeta)
-class Node(object):
+class OGMBase(object):
     def __init__(self, **kw):
         self.__changed__ = {}
         for prop in self.__nodetype__.properties:

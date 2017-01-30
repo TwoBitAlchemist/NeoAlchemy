@@ -1,85 +1,100 @@
 """Cypher object tests"""
 import pytest
 
-from neoalchemy import NodeType, Property
-from neoalchemy.cypher import Create, Match
-from neoalchemy.cypher.base import CompileError
+from neoalchemy import Create, Match, Node, Property, Relationship
+from neoalchemy.exceptions import DetachedObjectError
 
 
-def test_create_nodetype_no_props():
-    user = NodeType('User')
+def test_create_node_no_props():
+    user = Node('User')
     create = Create(user)
-    assert str(create) == 'CREATE (n:User)'
+    assert str(create) == 'CREATE (node:`User`)'
     assert not create.params
 
 
-def test_create_unique():
-    user = NodeType('User')
-    create = Create(user, unique=True)
-    assert str(create) == 'CREATE UNIQUE (n:User)'
-    assert not create.params
-
-
-def test_create_nodetype_one_prop():
-    user = NodeType('User', Property('name'))
+def test_create_node_one_prop():
+    expected_stmt = (
+        'CREATE (node:`User`)\n'
+        '    SET node.name = {node_name}'
+    )
+    user = Node('User', name=Property())
     create = Create(user)
-    assert str(create) == 'CREATE (n:User {name: {name_n}})'
+    assert str(create) == expected_stmt
     assert len(create.params) == 1
-    assert create.params['name_n'] is None
-    create = Create(user).set(name='Frank')
-    assert str(create) == 'CREATE (n:User) SET n.name = {name_n}'
+    assert 'node_name' in create.params
+    assert create.params['node_name'] is None
+    user.name = 'Frank'
+    create = Create(user)
+    assert str(create) == expected_stmt
     assert len(create.params) == 1
-    assert create.params['name_n'] == 'Frank'
+    assert 'node_name' in create.params
+    assert create.params['node_name'] == 'Frank'
 
 
-def test_create_nodetype_two_props():
-    user = NodeType('User', Property('name'), Property('age', type=int))
+def test_create_node_two_props():
+    user = Node('User', name=Property(), age=Property(type=int))
     create = Create(user)
     assert len(create.params) == 2
-    assert create.params['name_n'] is None
-    assert create.params['age_n'] is None
-    create.set(name='Frank').compile()
-    assert create.params['name_n'] == 'Frank'
-    assert create.params['age_n'] is None
-    create.set(age='29').compile()
-    assert create.params['age_n'] == 29
+    assert 'node_name' in create.params
+    assert create.params['node_name'] is None
+    assert 'node_age' in create.params
+    assert create.params['node_age'] is None
+    create.set(user['name'] == 'Frank')
+    assert len(create.params) == 2
+    assert 'node_name' in create.params
+    assert create.params['node_name'] == 'Frank'
+    assert 'node_age' in create.params
+    assert create.params['node_age'] is None
+    create.set(user['age'] == '29')
+    assert len(create.params) == 2
+    assert 'node_name' in create.params
+    assert create.params['node_name'] == 'Frank'
+    assert 'node_age' in create.params
+    assert create.params['node_age'] == 29
 
 
-def test_create_nodetype_two_labels():
-    user = NodeType('User', Property('name'), extra_labels=('Person',))
+def test_create_node_two_labels():
+    expected_stmt = (
+        'CREATE (node:`User`:`Person`)\n'
+        '    SET node.name = {node_name}'
+    )
+    user = Node('User', 'Person', name=Property())
     create = Create(user)
-    assert str(create) == 'CREATE (n:User:Person {name: {name_n}})'
+    assert str(create) == expected_stmt
 
 
 def test_create_relation_to_nowhere():
-    user = NodeType('User')
-    create = Create(user)['KNOWS']
-    with pytest.raises(CompileError):
-        str(create)
+    rel = Relationship('KNOWS', Node('User'))
+    with pytest.raises(DetachedObjectError):
+        create = Create(rel)
 
 
 def test_create_relationship():
-    user = NodeType('User')
-    create = Create(user)['KNOWS'](user)
-    assert str(create) == 'CREATE (n:User)-[r1:KNOWS]->(n1:User)'
+    rel = Relationship('KNOWS', Node('User'), Node('User'))
+    with pytest.raises(ValueError):
+        create = Create(rel)
+    rel.end_node.var = 'end_node'
+    create = Create(rel)
+    assert str(create) == 'CREATE (node:`User`)-[rel:KNOWS]->(end_node:`User`)'
+    rel = Relationship('KNOWS', Node('User', var='m'), Node('User', var='n'),
+                       var='r', directed=False)
+    create = Create(rel)
+    assert str(create) == 'CREATE (m:`User`)-[r:KNOWS]-(n:`User`)'
 
 
-def test_multiple_params():
-    user = NodeType('User', Property('name'))
-    create = Create(user)['KNOWS'](user)
-    assert str(create) == ('CREATE (n:User {name: {name_n}})'
-                           '-[r1:KNOWS]->(n1:User {name: {name_n1}})')
-    assert 'name_n' in create.params
-    assert 'name_n1' in create.params
-
-
-def test_multiple_named_params():
-    user = NodeType('User', Property('name'))
-    create = Create(user, 'n')['KNOWS'](user, 'm')
-    assert str(create) == ('CREATE (n:User {name: {name_n}})'
-                           '-[r1:KNOWS]->(m:User {name: {name_m}})')
-    assert 'name_n' in create.params
-    assert 'name_m' in create.params
+def test_full_relationship_create():
+    expected_query = (
+        'MATCH (m:`User`)\n'
+        'MATCH (n:`User`)\n'
+        'CREATE (m)-[rel:`KNOWS`]->(n)'
+    )
+    user_m = Node('User', name=Property(), var='m')
+    user_n = user_m.copy()
+    user_n.var = 'n'
+    rel = Relationship('KNOWS', user_m, user_n)
+    query = Match(user_m) & Match(user_n) & Create(rel)
+    assert str(query) == expected_query
+    assert len(query.params) == 0
 
 
 def test_full_match():
