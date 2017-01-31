@@ -43,3 +43,13 @@ def test_full_connection_string():
     assert graph.driver.config['auth'].scheme == 'basic'
     assert graph.driver.config['auth'].principal == 'user'
     assert graph.driver.config['auth'].credentials == 'pass'
+
+
+def test_separate_user_pass():
+    graph = Graph('bolt://localhost:7474', user='user', password='pass')
+    assert graph.driver.url == 'bolt://localhost:7474'
+    assert graph.driver.host == 'localhost'
+    assert graph.driver.port == 7474
+    assert graph.driver.config['auth'].scheme == 'basic'
+    assert graph.driver.config['auth'].principal == 'user'
+    assert graph.driver.config['auth'].credentials == 'pass'
