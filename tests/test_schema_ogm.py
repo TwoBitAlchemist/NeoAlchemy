@@ -1,15 +1,15 @@
-"""Schema ORM tests"""
+"""Schema OGM tests"""
 from datetime import date
 import uuid
 
 import pytest
 
-from neoalchemy import Node, Property
-from neoalchemy.types import isodate, UUID
+from neoalchemy import OGMBase, Property
+from neoalchemy.validators import isodate, UUID
 
 
 def test_property_type():
-    class MyNode(Node):
+    class MyNode(OGMBase):
         date = Property(type=isodate)
         string = Property()
         integer = Property(type=int)
@@ -35,7 +35,7 @@ def test_property_type():
 
 
 def test_property_default():
-    class MyNode(Node):
+    class MyNode(OGMBase):
         date = Property(type=isodate, default=date.today)
         integer = Property(type=int, default=14)
         uuid = Property(type=UUID, default=uuid.uuid4)

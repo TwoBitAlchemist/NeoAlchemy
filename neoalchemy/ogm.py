@@ -6,76 +6,55 @@ from .primitives import Node
 
 
 class PropertyDescriptor(object):
-    def __init__(self, property_obj):
-        self.__property = property_obj
+    def __init__(self, prop_name):
+        self.name = prop_name
 
-    def __get__(self, obj, type=None):
-        if obj is None:
-            return self.__property
-        return self.__property.value
+    def __get__(self, instance, owner):
+        if instance is None:
+            return owner.__node__[self.name]
+        return instance.__node__[self.name].value
 
-    def __set__(self, obj, value):
-        if obj is None:
-            raise AttributeError("Can't set attribute.")
+    def __set__(self, instance, value):
+        prop = instance.__node__[self.name]
+        if (prop.value is not None and prop.value != value):
+            obj.__changed__[self.name] = value
+        prop.value = value
 
-        if (self.__property.value is not None and
-                self.__property.value != value):
-            obj.__changed__[self.__property.name] = value
-        self.__property.value = value
-
-    def __delete__(self, obj):
+    def __delete__(self, instance):
         raise AttributeError("Can't remove attribute.")
 
 
-class NodeMeta(type):
+class OGMMeta(type):
     def __new__(mcs, class_name, bases, attrs):
-        if class_name != 'Node':
-            labels = []
-            properties = []
-            for base in bases:
-                try:
-                    labels.extend(base.__nodetype__.labels)
-                    properties.extend(base.__nodetype__.properties.values())
-                except AttributeError:
-                    pass
-            labels.append(attrs.get('LABEL', class_name))
-
-            for prop_name, prop in attrs.items():
-                if isinstance(prop, Property):
-                    if prop.name is None:
-                        prop.name = prop_name
-                    properties.append(prop)
-                    attrs[prop_name] = PropertyDescriptor(prop)
-            attrs['__nodetype__'] = Node(labels[0], *properties,
-                                             extra_labels=labels[1:])
-
-            if attrs.get('graph') is not None:
-                attrs['graph'].schema.add(attrs['__nodetype__'])
-
-        return super(NodeMeta, mcs).__new__(mcs, class_name, bases, attrs)
-
-
-@add_metaclass(NodeMeta)
-class OGMBase(object):
-    def __init__(self, **kw):
-        self.__changed__ = {}
-        for prop in self.__nodetype__.properties:
-            setattr(self, prop, kw.get(prop))
-
-    def create(self, unique=False):
-        return self.graph.query(Create(self.__nodetype__, unique=unique),
-                                **self.params)
-
-    def match(self):
-        match = Match(self.__nodetype__)
-        for param, value in self.params.items():
-            if value is None:
+        labels = []
+        properties = {}
+        for base in bases:
+            try:
+                labels.extend(base.__node__.labels)
+                properties.update({key: prop.copy()
+                                   for key, prop in base.__node__.items()})
+            except AttributeError:
                 continue
-            param = getattr(self.__class__, param.rsplit('_', 1)[0])
-            match = match.where(param==value)
-        return list(self.graph.query(match.return_(), **self.params))[0]
 
-    @property
-    def params(self):
-        return {'%s_n' % prop: getattr(self, prop)
-                for prop in self.__nodetype__.properties}
+        if not attrs.get('__abstract__'):
+            labels.append(attrs.get('LABEL') or class_name)
+
+        properties.update({k: v for k, v in attrs.items()
+                           if isinstance(v, Property)})
+        for prop_name in properties:
+            attrs[prop_name] = PropertyDescriptor(prop_name)
+        attrs['__node__'] = Node(*labels, **properties)
+
+        if attrs.get('graph') is not None:
+            attrs['graph'].schema.add(attrs['__node__'])
+            attrs['__node__'].graph = attrs['graph']
+
+        return super(OGMMeta, mcs).__new__(mcs, class_name, bases, attrs)
+
+
+@add_metaclass(OGMMeta)
+class OGMBase(object):
+    def __init__(self, **properties):
+        self.__changed__ = {}
+        for prop_name, value in properties.items():
+            setattr(self, prop_name, value)
