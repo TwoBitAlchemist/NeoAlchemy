@@ -25,11 +25,14 @@ class CypherQuery(list):
         return self
 
     def limit(self, limit):
-        self.append('LIMIT %i' % int(value))
+        self.append('LIMIT %i' % int(limit))
         return self
 
-    def order_by(self, *args):
-        self.append('ORDER BY ' + ', '.join(arg.var for arg in args))
+    def order_by(self, *args, **kw):
+        stmt = 'ORDER BY ' + ', '.join(arg.var for arg in args)
+        if kw.get('desc'):
+            stmt += ' DESC'
+        self.append(stmt)
         return self
 
     def remove(self, *args):
@@ -50,7 +53,7 @@ class CypherQuery(list):
         return self
 
     def skip(self, skip):
-        self.append('SKIP %i' % int(value))
+        self.append('SKIP %i' % int(skip))
         return self
 
     def where(self, *exprs, **kw):

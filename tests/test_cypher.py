@@ -54,13 +54,15 @@ def test_create_node_two_props():
 
 
 def test_create_node_two_labels():
-    expected_stmt = (
+    expected_stmts = (
+        'CREATE (node:`Person`:`User`)\n'
+        '    SET node.name = {node_name}',
         'CREATE (node:`User`:`Person`)\n'
         '    SET node.name = {node_name}'
     )
     user = Node('User', 'Person', name=Property())
     create = Create(user)
-    assert str(create) == expected_stmt
+    assert str(create) in expected_stmts
 
 
 def test_create_relation_to_nowhere():
@@ -74,12 +76,13 @@ def test_create_relationship():
     with pytest.raises(ValueError):
         create = Create(rel)
     rel.end_node.var = 'end_node'
-    create = Create(rel)
-    assert str(create) == 'CREATE (node:`User`)-[rel:KNOWS]->(end_node:`User`)'
+    assert str(Create(rel)) == 'CREATE (node)-[rel:`KNOWS`]->(end_node)'
+
+
+def test_create_undirected_relationship():
     rel = Relationship('KNOWS', Node('User', var='m'), Node('User', var='n'),
                        var='r', directed=False)
-    create = Create(rel)
-    assert str(create) == 'CREATE (m:`User`)-[r:KNOWS]-(n:`User`)'
+    assert str(Create(rel)) == 'CREATE (m)-[r:`KNOWS`]-(n)'
 
 
 def test_full_relationship_create():
@@ -98,79 +101,112 @@ def test_full_relationship_create():
 
 
 def test_full_match():
-    Person = NodeType('Person', Property('name'))
-    match = (Match(Person, 'n')['KNOWS'](Person, 'm')
-               .where(Person.name=='Alice', 'm'))
-    assert str(match) == ('MATCH (n:Person)-[r1:KNOWS]->(m:Person)'
-                          ' WHERE m.name = {name_m}')
-    assert match.params['name_m'] == 'Alice'
-    match.return_().order_by({'n': 'name'}).skip(1).limit(1)
-    assert str(match) == '\n'.join(('MATCH (n:Person)-[r1:KNOWS]->(m:Person)'
-                                    ' WHERE m.name = {name_m}',
-                                    'RETURN * ORDER BY n.name ASC '
-                                    'SKIP 1 LIMIT 1'))
-    assert match.params['name_m'] == 'Alice'
+    expected_stmt = (
+        'MATCH (m:`Person`)\n'
+        '    WHERE m.name = {m_name}\n'
+        'MATCH (n:`Person`)\n'
+        'MATCH (m)-[rel:`KNOWS`]->(n)'
+    )
+    person_m = Node('Person', name=Property(), var='m').bind('name')
+    person_m.name = 'Alice'
+    person_n = person_m.copy()
+    person_n.var = 'n'
+    knows = Relationship('KNOWS', person_m, person_n)
+    match = Match(person_m) & Match(person_n) & Match(knows)
+    assert str(match) == expected_stmt
+    assert len(match.params) == 1
+    assert 'm_name' in match.params
+    assert match.params['m_name'] == 'Alice'
+    match.return_().order_by(person_n['name']).skip(1).limit(1)
+    expected_stmt += (
+        '\n'
+        'RETURN *\n'
+        'ORDER BY n.name\n'
+        'SKIP 1\n'
+        'LIMIT 1'
+    )
+    assert str(match) == expected_stmt
+    assert len(match.params) == 1
+    assert 'm_name' in match.params
+    assert match.params['m_name'] == 'Alice'
 
 
 def test_return():
-    Person = NodeType('Person')
-    match = Match(Person)
-    query = 'MATCH (n:Person)'
+    n = Node('Person', name=Property(), x=Property(), y=Property(), var='n')
+    match = Match(n)
+    query = 'MATCH (n:`Person`)'
     assert str(match.return_()) == '\n'.join((query, 'RETURN *'))
-    assert str(match.return_('n')) == '\n'.join((query, 'RETURN n'))
-    match &= Match(Person, 'm')
-    query = '\n'.join((query, 'MATCH (m:Person)'))
-    assert str(match.return_(['n', 'm'])) == '\n'.join((query, 'RETURN n, m'))
-    assert str(match.return_({'n': 'name'})) == '\n'.join((query,
-                                                           'RETURN n.name'))
-    assert (str(match.return_({'n': ['x', 'y']})) == 
-            '\n'.join((query, 'RETURN n.x, n.y')))
-    try:
-        assert (str(match.return_({'m': 'x', 'n': 'y'})) == 
-                '\n'.join((query, 'RETURN n.y, m.x')))
-    except AssertionError:
-        assert (str(match.return_({'m': 'x', 'n': 'y'})) == 
-                '\n'.join((query, 'RETURN m.x, n.y')))
+    match.pop()
+    assert str(match.return_(n)) == '\n'.join((query, 'RETURN n'))
+    match.pop()
+    m = Node('Person', x=Property(), var='m')
+    match &= Match(m)
+    query = '\n'.join((query, 'MATCH (m:`Person`)'))
+    assert str(match.return_(n, m)) == '\n'.join((query, 'RETURN n, m'))
+    match.pop()
+    assert str(match.return_(n['name'])) == '\n'.join((query,
+                                                       'RETURN n.name'))
+    match.pop()
+    assert str(match.return_(n['x'], n['y'])) == '\n'.join((query,
+                                                            'RETURN n.x, n.y'))
+    match.pop()
+    assert str(match.return_(m['x'], n['y'])) == '\n'.join((query,
+                                                            'RETURN m.x, n.y'))
 
 
-def test_matching_super_simple_stuff():
-    Person = NodeType('Person')
-    match = Match(Person, 'n')(Person, 'm')
-    assert str(match) == 'MATCH (n:Person)-[r1]->(m:Person)'
-    match = Match(Person, 'n')[''](Person, 'm')
-    assert str(match) == 'MATCH (n:Person)-[r1]->(m:Person)'
-    match = Match(Person, 'n')[None](Person, 'm')
-    assert str(match) == 'MATCH (n:Person)-[r1]->(m:Person)'
+def test_matching_anonymous_relationship():
+    person_m = Node('Person', var='m')
+    person_n = person_m.copy()
+    person_n.var = 'n'
+    rel = Relationship(None, person_m, person_n)
+    match = Match(rel)
+    assert str(match) == 'MATCH (m)-[rel]->(n)'
 
 
 def test_optional_match():
-    Person = NodeType('Person')
-    match = Match(Person, 'n', optional=True)(Person, 'm')
-    assert str(match) == 'OPTIONAL MATCH (n:Person)-[r1]->(m:Person)'
+    person_m = Node('Person', var='m')
+    person_n = person_m.copy()
+    person_n.var = 'n'
+    rel = Relationship(None, person_m, person_n)
+    match = Match(rel, optional=True)
+    assert str(match) == 'OPTIONAL MATCH (m)-[rel]->(n)'
 
 
 def test_logical_cypher_expressions():
-    Person = NodeType('Person', Property('name'))
-    match = Match(Person).where(Person.name=='Alice')
-    assert str(match) == 'MATCH (n:Person) WHERE n.name = {name_n}'
-    assert match.params['name_n'] == 'Alice'
-    match = Match(Person).where(Person.name!='Alice')
-    assert str(match) == 'MATCH (n:Person) WHERE n.name <> {name_n}'
-    assert match.params['name_n'] == 'Alice'
-    match = Match(Person).where(Person.name>='Alice')
-    assert str(match) == 'MATCH (n:Person) WHERE n.name >= {name_n}'
-    assert match.params['name_n'] == 'Alice'
-    match = Match(Person).where(Person.name<='Alice')
-    assert str(match) == 'MATCH (n:Person) WHERE n.name <= {name_n}'
-    assert match.params['name_n'] == 'Alice'
-    match = Match(Person).where(Person.name<'Alice')
-    assert str(match) == 'MATCH (n:Person) WHERE n.name < {name_n}'
-    assert match.params['name_n'] == 'Alice'
-    match = Match(Person).where(Person.name>'Alice')
-    assert str(match) == 'MATCH (n:Person) WHERE n.name > {name_n}'
-    assert match.params['name_n'] == 'Alice'
+    person = Node('Person', name=Property(), var='n')
+    match = Match(person).where(person['name']=='Alice')
+    assert str(match) == 'MATCH (n:`Person`)\n    WHERE n.name = {n_name}'
+    assert len(match.params) == 1
+    assert 'n_name' in match.params
+    assert match.params['n_name'] == 'Alice'
+    match = Match(person).where(person['name']!='Alice')
+    assert str(match) == 'MATCH (n:`Person`)\n    WHERE n.name <> {n_name}'
+    assert len(match.params) == 1
+    assert 'n_name' in match.params
+    assert match.params['n_name'] == 'Alice'
+    match = Match(person).where(person['name']>='Alice')
+    assert str(match) == 'MATCH (n:`Person`)\n    WHERE n.name >= {n_name}'
+    assert len(match.params) == 1
+    assert 'n_name' in match.params
+    assert match.params['n_name'] == 'Alice'
+    match = Match(person).where(person['name']<='Alice')
+    assert str(match) == 'MATCH (n:`Person`)\n    WHERE n.name <= {n_name}'
+    assert len(match.params) == 1
+    assert 'n_name' in match.params
+    assert match.params['n_name'] == 'Alice'
+    match = Match(person).where(person['name']<'Alice')
+    assert str(match) == 'MATCH (n:`Person`)\n    WHERE n.name < {n_name}'
+    assert len(match.params) == 1
+    assert 'n_name' in match.params
+    assert match.params['n_name'] == 'Alice'
+    match = Match(person).where(person['name']>'Alice')
+    assert str(match) == 'MATCH (n:`Person`)\n    WHERE n.name > {n_name}'
+    assert len(match.params) == 1
+    assert 'n_name' in match.params
+    assert match.params['n_name'] == 'Alice'
 
 
+@pytest.mark.skip(reason='Combining CypherExpressions not yet supported')
 def test_complex_logical_cypher_expressions():
     Person = NodeType('Person', Property('name'), Property('hair_color'))
     expected_match = ('MATCH (n:Person) WHERE n.name = {name_n} '
@@ -224,6 +260,7 @@ def test_complex_logical_cypher_expressions():
                             'age_n': 29}
 
 
+@pytest.mark.skip(reason='Combining CypherExpressions not yet supported')
 def test_arithmetic_cypher_expressions():
     Person = NodeType('Person', Property('age', type=int))
 

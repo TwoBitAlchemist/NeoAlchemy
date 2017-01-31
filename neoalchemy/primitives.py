@@ -67,7 +67,8 @@ class Relationship(GraphObject):
                  directed=True, var='rel', **properties):
         super(Relationship, self).__init__(**properties)
         self.var = var
-        self.type = type
+        if type is not None:
+            self.type = type
         self.start_node = start_node
         self.end_node = end_node
         self.depth = depth
@@ -100,8 +101,9 @@ class Relationship(GraphObject):
             raise ValueError("Relationship start node and end node cannot "
                              "employ the same Cypher variable.")
 
-        base_pattern = '-[%s:`%s`%s%%s]-%s' % (self.var, self.type, self.depth,
-                                               '>' if self.directed else '')
+        type_spec = (':`%s`' % self.type) if self.type is not None else ''
+        base_pattern = '-[%s%s%s%%s]-%s' % (self.var, type_spec, self.depth,
+                                            '>' if self.directed else '')
         if inline_props and self.bound_keys:
             pattern = base_pattern % (' ' + self.inline_properties)
         else:
