@@ -1,3 +1,5 @@
+from weakref import WeakKeyDictionary
+
 import six
 
 from .exceptions import DetachedObjectError, ImmutableAttributeError
@@ -12,22 +14,22 @@ class SetOnceDescriptor(object):
     def __init__(self, name, type=None):
         self.name = name
         self.type = type
-        self.values = dict()
+        self.values = WeakKeyDictionary()
 
     def __get__(self, instance, owner):
         if instance is None:
             return getattr(owner, self.name)
 
-        return self.values.get(id(instance))
+        return self.values.get(instance)
 
     def __set__(self, instance, value):
-        if self.values.get(id(instance)) is not None:
+        if self.values.get(instance) is not None:
             raise ImmutableAttributeError(self.name, instance)
 
         if self.type is not None and value is not None:
-            self.values[id(instance)] = self.type(value)
+            self.values[instance] = self.type(value)
         else:
-            self.values[id(instance)] = value
+            self.values[instance] = value
 
     def __delete__(self, instance):
         raise ImmutableAttributeError(self.name, instance)
@@ -166,27 +168,37 @@ class CypherExpression(object):
         if not isinstance(property_, Property):
             raise ValueError('CypherExpression must be instantiated with '
                              'Property as first argument.')
+        self.__property_ = property_
+        self.__operand = operand
+        self.__operator = operator
+        self.__reverse = reverse
+        self.__compiled = False
 
-        if not isinstance(operand, Property):
-            self.__param = property_.param
-            self.__var = property_.var
-            if operand is not None:
-                self.__value = property_.type(operand)
+    def compile(self):
+        if not isinstance(self.__operand, Property):
+            self.__param = self.__property_.param
+            self.__var = self.__property_.var
+            if self.__operand is not None:
+                self.__value = self.__property_.type(self.__operand)
             else:
                 self.__value = None
-            expr = (property_.var, operator, '{%s}' % property_.param)
+            expr = (self.__property_.var, self.__operator,
+                    '{%s}' % self.__property_.param)
         else:
             self.__param = self.__value = self.__var = None
-            expr = (property_.var, operator, operand.var)
+            expr = (self.__property_.var, self.__operator, self.__operand.var)
 
-        self.__expr = ' '.join(reversed(expr) if reverse else expr)
+        self.__expr = ' '.join(reversed(expr) if self.__reverse else expr)
+        self.__compiled = True
 
     @property
     def param(self):
+        if not self.__compiled: self.compile()
         return self.__param
 
     @param.setter
     def param(self, value):
+        if not self.__compiled: self.compile()
         if self.__param is None:
             return
         if value is None:
@@ -197,14 +209,20 @@ class CypherExpression(object):
 
     @property
     def var(self):
+        if not self.__compiled: self.compile()
         return self.__var
 
     @property
     def value(self):
+        if not self.__compiled: self.compile()
         return self.__value
 
     def __str__(self):
+        if not self.__compiled: self.compile()
         return self.__expr
+
+    def __bool__(self):
+        return False
 
 
 @six.add_metaclass(PropertyMeta)
@@ -293,6 +311,9 @@ class Property(object):
         return ('<Property(name=%s, type=%s, default=%r, value=%r)>' %
                 (self.name, self.type, self.default, self.value))
 
+    def __hash__(self):
+        return id(self)
+
     # Mathematical Operators
     def __add__(self, x):         # self + x
         return CypherExpression(self, x, '+')
@@ -344,6 +365,7 @@ class Property(object):
 
     # Comparison Operators
     def __eq__(self, x):          # self == x
+        if x is self: return True
         return CypherExpression(self, x, '=')
 
     def __ne__(self, x):          # self != x
