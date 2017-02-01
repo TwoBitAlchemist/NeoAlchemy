@@ -45,22 +45,22 @@ The same thing in NeoAlchemy looks like this::
 
     import uuid
 
-    from neoalchemy import NodeType, Property, Graph
-    from neoalchemy.types import valid_uuid
+    from neoalchemy import Node, Property, Graph
+    from neoalchemy.validators import UUID
 
     graph = Graph()
 
-    user = NodeType('User',  # primary label
-        Property('uuid', unique=True, type=valid_uuid, default=uuid.uuid4),
-        Property('name', indexed=True),
-        Property('fullname', required=True)
+    user = Node('User',
+        uuid=Property(unique=True, type=UUID, default=uuid.uuid4),
+        name=Property(indexed=True),
+        full_name=Property(required=True)
     )
 
     # Emit schema-generating DDL
     graph.schema.add(user)
 
 
-This creates a simple :py:class:`NodeType` with three properties similar to the
+This creates a simple :py:class:`Node` with three properties similar to the
 above table. Each property represents an available `constraint`_ in Neo4J. The
 proper indexes and constraints are created when :py:meth:`graph.schema.add` is
 called.
@@ -76,7 +76,7 @@ Can't wait to learn more? Dive into :doc:`query-builder`.
 The High-Level API
 ==================
 
-NeoAlchemy's high-level API is :doc:`schema-ORM`. Python classes are used to
+NeoAlchemy's high-level API is :doc:`schema-OGM`. Python classes are used to
 map metadata to the database transparently. It is compared below to
 `SqlAlchemy's Declarative ORM`_::
 
@@ -100,13 +100,13 @@ The same thing in NeoAlchemy looks like this::
 
     import uuid
 
-    from neoalchemy import Node, Property, Graph
-    from neoalchemy.types import valid_uuid
+    from neoalchemy import OGMBase, Property, Graph
+    from neoalchemy.validators import UUID
 
-    class User(Node):
+    class User(OGMBase):
         graph = Graph()
 
-        uuid = Property(unique=True, type=valid_uuid, default=uuid.uuid4)
+        uuid = Property(unique=True, type=UUID, default=uuid.uuid4)
         name = Property(indexed=True)
         fullname = Property(required=True)
 
@@ -115,7 +115,7 @@ The same thing in NeoAlchemy looks like this::
 
 Notice that unlike SqlAlchemy, we have far less to import and we do not need
 to manually trigger metadata creation. We also don't have to explicitly
-specify a primary label for our underlying :py:class:`NodeType`. NeoAlchemy
+specify a label for our underlying :py:class:`Node`. NeoAlchemy
 uses the name of the class if none is specified.
 
 .. note::
@@ -124,10 +124,10 @@ uses the name of the class if none is specified.
     distinguishing which classes map to which graphs, even if multiple classes
     touching different graphs are grouped in the same file.
 
-Wanna learn more? Skip straight to the :doc:`schema-ORM`.
+Wanna learn more? Skip straight to the :doc:`schema-OGM`.
 
 .. _SqlAlchemy Expression Language: http://docs.sqlalchemy.org/en/latest/core/tutorial.html
-.. _constraint: https://neo4j.com/docs/developer-manual/current/#query-constraints
-.. _Property Existence constraint: https://neo4j.com/docs/developer-manual/current/#constraints-create-node-property-existence-constraint
+.. _constraint: https://neo4j.com/docs/developer-manual/current/cypher/schema/constraints/
+.. _Property Existence constraint: https://neo4j.com/docs/developer-manual/current/cypher/schema/constraints/#query-constraints-prop-exist-nodes
 .. _Neo4J Enterprise Edition: https://neo4j.com/editions/
 .. _SqlAlchemy's Declarative ORM: http://docs.sqlalchemy.org/en/latest/orm/tutorial.html

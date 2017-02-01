@@ -6,25 +6,25 @@ The QueryBuilder API
 
 .. note::
     If you don't need the QueryBuilder API, feel free to skip straight to
-    learning about the :doc:`schema-ORM`.
+    learning about the :doc:`schema-OGM`.
 
 The QueryBuilder API allows you to express familiar Cypher queries using normal
 Python objects and operators. To demonstrate it, we will use a simple
-:py:class:`NodeType` like the ``user`` we defined in the previous section.
-We'll call this one ``Person`` and give it a few simple characteristics::
+:py:class:`Node` like the ``user`` we defined in the previous section.
+We'll call this one ``person`` and give it a few simple characteristics::
 
-    from neoalchemy import NodeType, Property
+    from neoalchemy import Node, Property
 
-    Person = NodeType('Person',
-        Property('name', indexed=True),
-        Property('age', type=int),
-        Property('hair_color')
+    person = Node('Person',
+        name=Property(indexed=True),
+        age=Property(type=int),
+        hair_color=Property()
     )
 
 Don't forget to create the indexes and constraints you specified using
 :py:meth:`graph.schema.add`::
 
-    graph.schema.add(Person)
+    graph.schema.add(person)
 
 .. warning::
     From `the Neo4J Docs`_:
@@ -41,18 +41,19 @@ Create
 ======
 
 NeoAlchemy features :doc:`querybuilder-classes` which correspond to `familiar
-Cypher verbs`_. These are located in the :py:mod:`neoalchemy.cypher` module::
+Cypher verbs`_::
 
-    from neoalchemy.cypher import Create
+    from neoalchemy import Create
 
 Let's start by constructing perhaps the simplest query possible::
 
-    create = Create(Person)
+    create = Create(person)
 
 We can see the query this generates by printing it::
 
     >>> print(create)
-    CREATE (n:Person {age: {age_n}, name: {name_n}, hair_color: {hair_color_n}})
+    CREATE (node:`Person`)
+        SET node.name = {node_name}, node.age = {node_age}, node.hair_color = {node_hair_color}
 
 NeoAlchemy has automatically applied the ``Person`` label and created
 parameters associated with each of the properties we defined. We can see
@@ -60,34 +61,24 @@ the current values for each parameter by inspecting the
 :py:attr:`~neoalchemy.cypher.CypherVerb.params` dict::
 
     >>> create.params
-    {'age_n': None, 'hair_color_n': None, 'name_n': None}
+    {'node_age': None, 'node_hair_color': None, 'node_name': None}
 
 Each parameter is named according to its associated property and the variable
-representing its associated node in the underlying Cypher. By Neo4J convention,
-the default parameter is ``n``. This can be freely changed to whatever you like
-by specifying a second argument to :py:class:`~neoalchemy.cypher.Create`::
+representing its associated node in the underlying Cypher. The default
+parameter is ``node``. This can be freely changed to whatever you like::
 
-    >>> create = Create(Person, 'm')
-    >>> print(create)
-    CREATE (m:Person {age: {age_m}, name: {name_m}, hair_color: {hair_color_m}})
+    >>> person.var = 'n'
+    >>> print(Create(person))
+    CREATE (n:`Person`)
+        SET n.name = {n_name}, n.age = {n_age}, n.hair_color = {n_hair_color}
 
-This is an important feature which will come in handy when specifying more
-complex queries, as we will see later.
+Properties can be set individually on the Node::
 
-Properties can either be set one at a time using
-:py:meth:`~neoalchemy.cypher.CypherVerb.set`::
+    >>> person.name = 'Ali'
+    >>> person.age = 30
+    >>> person.hair_color = 'red'
 
-    create = Create(Person).set(Person.hair_color, 'red')
-
-Or set directly using the :py:attr:`~neoalchemy.cypher.CypherVerb.params`
-dict::
-
-    >>> create.params['name_n'] = 'Ali'
-    >>> ali_params = {'age_n': 29, 'hair_color_n': 'red'}
-    >>> create.params.update(ali_params)
-
-
-Once you're satisfied with your settings, you can write it to the graph using
+Once you're satisfied, you can write it to the graph using
 :py:class:`graph.query`::
 
     >>> graph.query(create, **create.params)
@@ -274,7 +265,7 @@ If you instead want ``UNION``, use the ``^`` (`exclusive or`_) operator.
 
 
 .. _the Neo4J Docs: http://neo4j.com/docs/developer-manual/current/#graphdb-neo4j-schema-indexes
-.. _familiar Cypher verbs: https://neo4j.com/docs/developer-manual/current/#query-create
+.. _familiar Cypher verbs: https://neo4j.com/docs/developer-manual/current/cypher/clauses/
 .. _Neo4J StatementResult: https://neo4j.com/docs/api/python-driver/current/#neo4j.v1.StatementResult
 .. _For performance reasons: https://neo4j.com/docs/developer-manual/current/#query-tuning
 .. _REMOVE: https://neo4j.com/docs/developer-manual/current/#query-remove
