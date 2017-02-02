@@ -152,17 +152,6 @@ def _valid_graph_obj(obj):
     return obj
 
 
-class PropertyMeta(type):
-    def __init__(cls, class_name, bases, attrs):
-        cls.name = SetOnceDescriptor('name', type=str)
-        cls.type = SetOnceDescriptor('type')
-        cls.obj = SetOnceDescriptor('obj', type=_valid_graph_obj)
-        for attr in ('unique', 'indexed', 'required',
-                     'primary_key', 'read_only'):
-            setattr(cls, attr, SetOnceDescriptor(attr, type=bool))
-        super(PropertyMeta, cls).__init__(class_name, bases, attrs)
-
-
 class CypherExpression(object):
     def __init__(self, property_, operand, operator, reverse=False):
         if not isinstance(property_, Property):
@@ -223,6 +212,18 @@ class CypherExpression(object):
 
     def __bool__(self):
         return False
+
+
+class PropertyMeta(type):
+    def __init__(cls, class_name, bases, attrs):
+        cls.name = SetOnceDescriptor('name', type=str)
+        cls.type = SetOnceDescriptor('type')
+        cls.default = SetOnceDescriptor('default')
+        cls.obj = SetOnceDescriptor('obj', type=_valid_graph_obj)
+        for attr in ('unique', 'indexed', 'required',
+                     'primary_key', 'read_only'):
+            setattr(cls, attr, SetOnceDescriptor(attr, type=bool))
+        super(PropertyMeta, cls).__init__(class_name, bases, attrs)
 
 
 @six.add_metaclass(PropertyMeta)

@@ -67,8 +67,7 @@ class Relationship(GraphObject):
                  directed=True, var='rel', **properties):
         super(Relationship, self).__init__(**properties)
         self.var = var
-        if type is not None:
-            self.type = type
+        self.type = type
         self.start_node = start_node
         self.end_node = end_node
         self.depth = depth

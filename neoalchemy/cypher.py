@@ -61,11 +61,12 @@ class CypherQuery(list):
         stmt_list = [self._add_expression(expr) for expr in exprs]
         if stmt_list:
             statements = ' AND '.join(stmt_list)
-            if self[-1].startswith('    WHERE'):
-                keyword = '      AND ' if not or_ else '       OR '
+            if any(keyword.rjust(9) == self[-1][:9]
+                    for keyword in ('WHERE', 'AND', 'OR')):
+                keyword = 'AND ' if not or_ else 'OR '
             else:
-                keyword = '    WHERE '
-            self.append(keyword + statements)
+                keyword = 'WHERE '
+            self.append(keyword.rjust(10) + statements)
         return self
 
     def with_(self, *args):
@@ -95,16 +96,19 @@ class CypherQuery(list):
 
     def __and__(self, query):
         self.extend(query)
+        self.params.update(query.params)
         return self
 
     def __or__(self, query):
         self.append('UNION ALL')
         self.extend(query)
+        self.params.update(query.params)
         return self
 
     def __xor__(self, query):
         self.append('UNION')
         self.extend(query)
+        self.params.update(query.params)
         return self
 
 
