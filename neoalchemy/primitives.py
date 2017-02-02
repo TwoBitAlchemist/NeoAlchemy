@@ -33,11 +33,12 @@ class Node(GraphObject):
             self.type = labels[-1]
             self.var = var
 
-    def copy(self, shallow=False):
+    def copy(self, shallow=False, var=None):
+        var = var or self.var
         if shallow:
-            return Node(graph=self.graph, *self.labels)
+            return Node(graph=self.graph, var=var, *self.labels)
         else:
-            return Node(graph=self.graph, *self.labels,
+            return Node(graph=self.graph, var=var, *self.labels,
                         **{key: prop.copy() for key, prop in self.items()})
 
     def pattern(self, inline_props=False):
