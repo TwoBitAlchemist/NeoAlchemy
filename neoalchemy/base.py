@@ -111,7 +111,7 @@ class GraphObject(object):
 
     @property
     def inline_properties(self):
-        return '{%s}' % ', '.join('%s: {%s}' % (prop, self[prop].label)
+        return '{%s}' % ', '.join('%s: {%s}' % (prop, self[prop].param)
                                                 for prop in self.bound_keys)
 
     @property
@@ -122,7 +122,7 @@ class GraphObject(object):
         if not attr.endswith('__properties') and attr in self.__properties:
             return self[attr]
         else:
-            return getattr(super(GraphObject, self), attr)
+            return getattr(super(self.__class__, self), attr)
 
     def __setattr__(self, attr, value):
         if not attr.endswith('__properties') and attr in self.__properties:
@@ -228,7 +228,7 @@ class PropertyMeta(type):
 
 @six.add_metaclass(PropertyMeta)
 class Property(object):
-    def __init__(self, obj=None, type=str, default=None,
+    def __init__(self, obj=None, type=str, default=None, value=None,
                  indexed=False, unique=False, required=False,
                  primary_key=False, read_only=False):
         self.obj = obj
@@ -239,16 +239,18 @@ class Property(object):
         self.required = bool(required)
 
         self.default = default
-        self.__value = self.value = None
+        self.__value = self.value = value
 
         self.primary_key = primary_key
         self.read_only = read_only
 
     def copy(self):
-        return Property(type=self.type, default=self.default,
+        copy = Property(type=self.type, default=self.default,
                         indexed=self.indexed, unique=self.unique,
                         required=self.required, primary_key=self.primary_key,
                         read_only=self.read_only)
+        copy.value = self.value
+        return copy
 
     @property
     def is_bound(self):

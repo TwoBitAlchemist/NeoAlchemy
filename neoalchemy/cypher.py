@@ -20,7 +20,7 @@ class CypherQuery(list):
 
     def delete(self, *args, **kw):
         detach = kw.get('detach')
-        keyword = 'DETACH DELETE' if detach else 'DELETE'
+        keyword = 'DETACH DELETE ' if detach else 'DELETE '
         self.append(keyword + ', '.join(arg.var for arg in args))
         return self
 
@@ -74,7 +74,9 @@ class CypherQuery(list):
         return self
 
     def set_param(self, name, value):
-        if self.params.get(name) is not None:
+        if name is None and value is None:
+            return
+        if name is None or self.params.get(name) is not None:
             name = 'param%i' % self.__extra_params
             self.__extra_params += 1
         self.params[name] = value
@@ -130,7 +132,7 @@ class Match(CypherQuery):
 class Merge(CypherQuery):
     def __init__(self, graph_obj):
         super(Merge, self).__init__(graph_obj, use_full_pattern=True)
-        self.params.update({p.var: p.value for k, p in graph_obj.items()
+        self.params.update({p.param: p.value for k, p in graph_obj.items()
                             if k in graph_obj.bound_keys})
 
     def on_create(self):
