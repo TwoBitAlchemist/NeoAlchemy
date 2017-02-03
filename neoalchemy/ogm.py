@@ -57,4 +57,4 @@ class OGMBase(object):
     def __init__(self, **properties):
         self.__changed__ = {}
         for prop_name, value in properties.items():
-            setattr(self, prop_name, value)
+            self.__node__[prop_name].value = value
