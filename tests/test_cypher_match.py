@@ -131,7 +131,15 @@ def test_where_and_set():
         '    WHERE n.name = {n_name} AND n.age = {n_age}',
     ]
     match = Match(person.bind('name', 'age'))
-    assert str(match) == '\n'.join(expected_match)
+    try:
+        assert str(match) == '\n'.join(expected_match)
+    except AssertionError:
+        expected_match.pop()
+        expected_match.append(
+            '    WHERE n.age = {n_age}'
+            ' AND n.name = {n_name}'
+        )
+        assert str(match) == '\n'.join(expected_match)
     assert len(match.params) == 2
     assert 'n_name' in match.params
     assert match.params['n_name'] == 'Ali'
