@@ -2,7 +2,7 @@ from weakref import WeakKeyDictionary
 
 import six
 
-from .exceptions import DetachedObjectError, ImmutableAttributeError
+from .exceptions import ImmutableAttributeError
 
 try:
     str = unicode
@@ -72,42 +72,6 @@ class GraphObject(object):
     @property
     def is_bound(self):
         return self.__primary_keys is not None
-
-    def create(self):
-        if self.graph is None:
-            raise DetachedObjectError(self, action='create')
-
-        create = Create(self)
-        self.graph.run(str(create), **create.params)
-        return self
-
-    def delete(self, detach=True):
-        if self.graph is None:
-            raise DetachedObjectError(self, action='delete')
-
-        match = Match(self).delete(self, detach=detach)
-        self.graph.run(str(match), **match.params)
-
-    def match(self):
-        if self.graph is None:
-            raise DetachedObjectError(self, action='match')
-
-        match = Match(self).return_(self)
-        return self.graph.run(str(match), **match.params)
-
-    def merge(self, *changed):
-        if self.graph is None:
-            raise DetachedObjectError(self, action='merge')
-
-        merge = (
-            Merge(self)
-                .on_create()
-                    .set(*self.values())
-                .on_match()
-                    .set(*(self[key] for key in changed))
-            .return_(self)
-        )
-        return self.graph.run(str(merge), **merge.params)
 
     @property
     def inline_properties(self):
