@@ -17,7 +17,7 @@ class PropertyDescriptor(object):
     def __set__(self, instance, value):
         prop = instance.__node__[self.name]
         if prop.value != value:
-            obj.__changed__[self.name] = value
+            instance.__changed__[self.name] = value
         prop.value = value
 
     def __delete__(self, instance):
