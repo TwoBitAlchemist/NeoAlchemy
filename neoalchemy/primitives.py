@@ -3,6 +3,7 @@ import six
 from .base import GraphObject, SetOnceDescriptor
 from .cypher import Create, Match, Merge
 from .exceptions import DetachedObjectError
+from .operations import Exists
 
 try:
     str = unicode
@@ -96,7 +97,7 @@ class Relationship(GraphObject):
                 self.__depth = '%i..%i' % map(int, depth)
 
     def exists(self, exists=True):
-        return ExistsClause(self, exists)
+        return Exists(self, exists)
 
     def pattern(self, inline_props=False):
         if self.start_node is None or self.end_node is None:

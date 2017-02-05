@@ -133,114 +133,134 @@ def test_logical_cypher_expressions():
     assert match.params['n_name'] == 'Alice'
 
 
-@pytest.mark.skip(reason='Combining CypherExpressions not yet supported')
 def test_complex_logical_cypher_expressions():
-    Person = NodeType('Person', Property('name'), Property('hair_color'))
-    expected_match = ('MATCH (n:Person) WHERE n.name = {name_n} '
-                      'AND n.hair_color = {hair_color_n}')
+    Person = Node('Person', name=Property(), hair_color=Property(), var='n')
+    expected_match = [
+        'MATCH (n:`Person`)',
+        '    WHERE n.name = {n_name}',
+        '      AND n.hair_color = {n_hair_color}'
+    ]
 
     match = (Match(Person)
-                .where(Person.name=='Alice')
-                .where(Person.hair_color=='red'))
-    assert str(match) == expected_match
-    assert match.params == {'name_n': 'Alice', 'hair_color_n': 'red'}
+                .where(Person['name']=='Alice')
+                .where(Person['hair_color']=='red'))
+    assert str(match) == '\n'.join(expected_match)
+    assert match.params == {'n_name': 'Alice', 'n_hair_color': 'red'}
 
     match = (Match(Person)
-                .where((Person.name=='Alice') & (Person.hair_color=='red')))
-    assert str(match) == expected_match
-    assert match.params == {'name_n': 'Alice', 'hair_color_n': 'red'}
+                .where((Person['name']=='Alice'), (Person['hair_color']=='red')))
+    assert str(match) == '\n'.join((expected_match[0],
+                                    ' '.join((expected_match[1],
+                                              expected_match[2].lstrip()))))
+    assert match.params == {'n_name': 'Alice', 'n_hair_color': 'red'}
 
-    Person = NodeType('Person', Property('name'), Property('hair_color'),
-                      Property('age', type=int))
-    expected_match += ' AND n.age = {age_n}'
+    Person = Node('Person', name=Property(), hair_color=Property(),
+                  age=Property(type=int), var='n')
+    expected_match.append('      AND n.age = {n_age}')
     match = (Match(Person)
-                .where((Person.name=='Alice') &
-                       (Person.hair_color=='red') &
-                       (Person.age=='29')))
-    assert str(match) == expected_match
-    assert match.params == {'name_n': 'Alice', 'hair_color_n': 'red',
-                            'age_n': 29}
-
-    match = (Match(Person)
-                .where(Person.name=='Alice')
-                .where(Person.hair_color=='red')
-                .where(Person.age==29))
-    assert str(match) == expected_match
-    assert match.params == {'name_n': 'Alice', 'hair_color_n': 'red',
-                            'age_n': 29}
-
-    expected_match = 'OR'.join(expected_match.rsplit('AND', 1))
-    match = (Match(Person)
-                .where((Person.name=='Alice') &
-                       (Person.hair_color=='red') |
-                       (Person.age==29)))
-    assert str(match) == expected_match
-    assert match.params == {'name_n': 'Alice', 'hair_color_n': 'red',
-                            'age_n': 29}
+                .where((Person['name']=='Alice'),
+                       (Person['hair_color']=='red'),
+                       (Person['age']=='29')))
+    assert str(match) == '\n'.join((expected_match[0],
+                                    ' '.join((expected_match[1],
+                                              expected_match[2].lstrip(),
+                                              expected_match[3].lstrip()))))
+    assert match.params == {'n_name': 'Alice', 'n_hair_color': 'red',
+                            'n_age': 29}
 
     match = (Match(Person)
-                .where(Person.name=='Alice')
-                .where(Person.hair_color=='red')
-                .where(Person.age==29, or_=True))
-    assert str(match) == expected_match
-    assert match.params == {'name_n': 'Alice', 'hair_color_n': 'red',
-                            'age_n': 29}
+                .where(Person['name']=='Alice')
+                .where(Person['hair_color']=='red')
+                .where(Person['age']==29))
+    assert str(match) == '\n'.join(expected_match)
+    assert match.params == {'n_name': 'Alice', 'n_hair_color': 'red',
+                            'n_age': 29}
+
+    expected_match[3] = expected_match[3].replace('AND', ' OR')
+    match = (Match(Person)
+                .where((Person['name']=='Alice'),
+                       (Person['hair_color']=='red'))
+                .where(Person['age']==29, or_=True))
+    assert str(match) == '\n'.join((expected_match[0],
+                                    ' '.join((expected_match[1],
+                                              expected_match[2].lstrip())),
+                                              expected_match[3]))
+    assert match.params == {'n_name': 'Alice', 'n_hair_color': 'red',
+                            'n_age': 29}
+
+    match = (Match(Person)
+                .where(Person['name']=='Alice')
+                .where(Person['hair_color']=='red')
+                .where(Person['age']==29, or_=True))
+    assert str(match) == '\n'.join(expected_match)
+    assert match.params == {'n_name': 'Alice', 'n_hair_color': 'red',
+                            'n_age': 29}
 
 
-@pytest.mark.skip(reason='Combining CypherExpressions not yet supported')
 def test_arithmetic_cypher_expressions():
-    Person = NodeType('Person', Property('age', type=int))
+    Person = Node('Person', age=Property(type=int), var='n')
+    expected_stmt = ['MATCH (n:`Person`)', '']
 
-    match = Match(Person).where((Person.age + 5) == 23)
-    assert str(match) == 'MATCH (n:Person) WHERE n.age + {param0} = {param1}'
-    assert match.params['param0'] == 5
-    assert match.params['param1'] == 23
-    match = Match(Person).where((5 + Person.age) == 23)
-    assert str(match) == 'MATCH (n:Person) WHERE n.age + {param0} = {param1}'
-    assert match.params['param0'] == 5
-    assert match.params['param1'] == 23
+    match = Match(Person).where((Person['age'] + 5) == 23)
+    expected_stmt[1] = '    WHERE n.age + {n_age} = {param0}'
+    assert str(match) == '\n'.join(expected_stmt)
+    assert match.params['n_age'] == 5
+    assert match.params['param0'] == 23
+    match = Match(Person).where((5 + Person['age']) == 23)
+    assert str(match) == '\n'.join(expected_stmt)
+    assert match.params['n_age'] == 5
+    assert match.params['param0'] == 23
 
-    match = Match(Person).where((Person.age - 4) == 13)
-    assert str(match) == 'MATCH (n:Person) WHERE n.age - {param0} = {param1}'
-    assert match.params['param0'] == 4
-    assert match.params['param1'] == 13
-    match = Match(Person).where((4 - Person.age) == 13)
-    assert str(match) == 'MATCH (n:Person) WHERE {param0} - n.age = {param1}'
-    assert match.params['param0'] == 4
-    assert match.params['param1'] == 13
+    match = Match(Person).where((Person['age'] - 4) == 13)
+    expected_stmt[1] = '    WHERE n.age - {n_age} = {param0}'
+    assert str(match) == '\n'.join(expected_stmt)
+    assert match.params['n_age'] == 4
+    assert match.params['param0'] == 13
+    match = Match(Person).where((4 - Person['age']) == 13)
+    expected_stmt[1] = '    WHERE {n_age} - n.age = {param0}'
+    assert str(match) == '\n'.join(expected_stmt)
+    assert match.params['n_age'] == 4
+    assert match.params['param0'] == 13
 
-    match = Match(Person).where((Person.age * 5) == 23)
-    assert str(match) == 'MATCH (n:Person) WHERE n.age * {param0} = {param1}'
-    assert match.params['param0'] == 5
-    assert match.params['param1'] == 23
-    match = Match(Person).where((5 * Person.age) == 23)
-    assert str(match) == 'MATCH (n:Person) WHERE n.age * {param0} = {param1}'
-    assert match.params['param0'] == 5
-    assert match.params['param1'] == 23
+    match = Match(Person).where((Person['age'] * 5) == 23)
+    expected_stmt[1] = '    WHERE n.age * {n_age} = {param0}'
+    assert str(match) == '\n'.join(expected_stmt)
+    assert match.params['n_age'] == 5
+    assert match.params['param0'] == 23
+    match = Match(Person).where((5 * Person['age']) == 23)
+    assert str(match) == '\n'.join(expected_stmt)
+    assert match.params['n_age'] == 5
+    assert match.params['param0'] == 23
 
-    match = Match(Person).where((Person.age / 4) == 13)
-    assert str(match) == 'MATCH (n:Person) WHERE n.age / {param0} = {param1}'
-    assert match.params['param0'] == 4
-    assert match.params['param1'] == 13
-    match = Match(Person).where((4 / Person.age) == 13)
-    assert str(match) == 'MATCH (n:Person) WHERE {param0} / n.age = {param1}'
-    assert match.params['param0'] == 4
-    assert match.params['param1'] == 13
+    match = Match(Person).where((Person['age'] / 4) == 13)
+    expected_stmt[1] = '    WHERE n.age / {n_age} = {param0}'
+    assert str(match) == '\n'.join(expected_stmt)
+    assert match.params['n_age'] == 4
+    assert match.params['param0'] == 13
+    match = Match(Person).where((4 / Person['age']) == 13)
+    expected_stmt[1] = '    WHERE {n_age} / n.age = {param0}'
+    assert str(match) == '\n'.join(expected_stmt)
+    assert match.params['n_age'] == 4
+    assert match.params['param0'] == 13
 
-    match = Match(Person).where((Person.age % 4) == 13)
-    assert str(match) == 'MATCH (n:Person) WHERE n.age % {param0} = {param1}'
-    assert match.params['param0'] == 4
-    assert match.params['param1'] == 13
-    match = Match(Person).where((4 % Person.age) == 13)
-    assert str(match) == 'MATCH (n:Person) WHERE {param0} % n.age = {param1}'
-    assert match.params['param0'] == 4
-    assert match.params['param1'] == 13
+    match = Match(Person).where((Person['age'] % 4) == 13)
+    expected_stmt[1] = '    WHERE n.age % {n_age} = {param0}'
+    assert str(match) == '\n'.join(expected_stmt)
+    assert match.params['n_age'] == 4
+    assert match.params['param0'] == 13
+    match = Match(Person).where((4 % Person['age']) == 13)
+    expected_stmt[1] = '    WHERE {n_age} % n.age = {param0}'
+    assert str(match) == '\n'.join(expected_stmt)
+    assert match.params['n_age'] == 4
+    assert match.params['param0'] == 13
 
-    match = Match(Person).where((Person.age ** 4) == 13)
-    assert str(match) == 'MATCH (n:Person) WHERE n.age ^ {param0} = {param1}'
-    assert match.params['param0'] == 4
-    assert match.params['param1'] == 13
-    match = Match(Person).where((4 ** Person.age) == 13)
-    assert str(match) == 'MATCH (n:Person) WHERE {param0} ^ n.age = {param1}'
-    assert match.params['param0'] == 4
-    assert match.params['param1'] == 13
+    match = Match(Person).where((Person['age'] ** 4) == 13)
+    expected_stmt[1] = '    WHERE n.age ^ {n_age} = {param0}'
+    assert str(match) == '\n'.join(expected_stmt)
+    assert match.params['n_age'] == 4
+    assert match.params['param0'] == 13
+    match = Match(Person).where((4 ** Person['age']) == 13)
+    expected_stmt[1] = '    WHERE {n_age} ^ n.age = {param0}'
+    assert str(match) == '\n'.join(expected_stmt)
+    assert match.params['n_age'] == 4
+    assert match.params['param0'] == 13

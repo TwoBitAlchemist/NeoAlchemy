@@ -3,6 +3,7 @@ from weakref import WeakKeyDictionary
 import six
 
 from .exceptions import ImmutableAttributeError
+from .operations import CypherExpression, CypherOperatorInterface
 
 try:
     str = unicode
@@ -84,7 +85,7 @@ class GraphObject(object):
 
     def __getattr__(self, attr):
         if not attr.endswith('__properties') and attr in self.__properties:
-            return self[attr]
+            return self[attr].value
         else:
             return getattr(super(self.__class__, self), attr)
 
@@ -110,88 +111,27 @@ class GraphObject(object):
         return '<%s: %s>' % (self.__class__.__name__, self.pattern())
 
 
-def _valid_graph_obj(obj):
-    if not isinstance(obj, GraphObject):
-        raise ValueError('Property can only be bound to Node or Relationship.')
-    return obj
-
-
-class CypherExpression(object):
-    def __init__(self, property_, operand, operator, reverse=False):
-        if not isinstance(property_, Property):
-            raise ValueError('CypherExpression must be instantiated with '
-                             'Property as first argument.')
-        self.__property_ = property_
-        self.__operand = operand
-        self.__operator = operator
-        self.__reverse = reverse
-        self.__compiled = False
-
-    def compile(self):
-        if not isinstance(self.__operand, Property):
-            self.__param = self.__property_.param
-            self.__var = self.__property_.var
-            if self.__operand is not None:
-                self.__value = self.__property_.type(self.__operand)
-            else:
-                self.__value = None
-            expr = (self.__property_.var, self.__operator,
-                    '{%s}' % self.__property_.param)
-        else:
-            self.__param = self.__value = self.__var = None
-            expr = (self.__property_.var, self.__operator, self.__operand.var)
-
-        self.__expr = ' '.join(reversed(expr) if self.__reverse else expr)
-        self.__compiled = True
-
-    @property
-    def param(self):
-        if not self.__compiled: self.compile()
-        return self.__param
-
-    @param.setter
-    def param(self, value):
-        if not self.__compiled: self.compile()
-        if self.__param is None:
-            return
-        if value is None:
-            raise AttributeError("Can't unset parameter")
-
-        self.__expr = self.__expr.replace(self.__param, value)
-        self.__param = value
-
-    @property
-    def var(self):
-        if not self.__compiled: self.compile()
-        return self.__var
-
-    @property
-    def value(self):
-        if not self.__compiled: self.compile()
-        return self.__value
-
-    def __str__(self):
-        if not self.__compiled: self.compile()
-        return self.__expr
-
-    def __bool__(self):
-        return False
-
-
 class PropertyMeta(type):
     def __init__(cls, class_name, bases, attrs):
         cls.name = SetOnceDescriptor('name', type=str)
         cls.type = SetOnceDescriptor('type')
         cls.default = SetOnceDescriptor('default')
-        cls.obj = SetOnceDescriptor('obj', type=_valid_graph_obj)
+        cls.obj = SetOnceDescriptor('obj', type=PropertyMeta.valid_graph_obj)
         for attr in ('unique', 'indexed', 'required',
                      'primary_key', 'read_only'):
             setattr(cls, attr, SetOnceDescriptor(attr, type=bool))
         super(PropertyMeta, cls).__init__(class_name, bases, attrs)
 
+    @staticmethod
+    def valid_graph_obj(obj):
+        if not isinstance(obj, GraphObject):
+            raise ValueError('Property can only be bound to '
+                             'Node or Relationship.')
+        return obj
+
 
 @six.add_metaclass(PropertyMeta)
-class Property(object):
+class Property(CypherOperatorInterface):
     def __init__(self, obj=None, type=str, default=None, value=None,
                  indexed=False, unique=False, required=False,
                  primary_key=False, read_only=False):
@@ -280,72 +220,3 @@ class Property(object):
 
     def __hash__(self):
         return id(self)
-
-    # Mathematical Operators
-    def __add__(self, x):         # self + x
-        return CypherExpression(self, x, '+')
-
-    def __radd__(self, x):        # x + self
-        return self.__add__(x)
-
-    def __sub__(self, x):         # self - x
-        return CypherExpression(self, x, '-')
-
-    def __rsub__(self, x):        # x - self
-        return CypherExpression(self, x, '-', reverse=True)
-
-    def __mul__(self, x):         # self * x
-        return CypherExpression(self, x, '*')
-
-    def __rmul__(self, x):        # x * self
-        return self.__mul__(x)
-
-    def __div__(self, x):         # self / x
-        return CypherExpression(self, x, '/')
-
-    def __rdiv__(self, x):        # x / self
-        return CypherExpression(self, x, '/', reverse=True)
-
-    def __truediv__(self, x):     # self / x  (__future__.division)
-        return self.__div__(x)
-
-    def __rtruediv__(self, x):    # x / self  (__future__.division)
-        return self.__rdiv__(x)
-
-    def __floordiv__(self, x):    # self // x
-        return self.__div__(x)
-
-    def __rfloordiv__(self, x):   # x // self
-        return self.__rdiv__(x)
-
-    def __mod__(self, x):         # self % x
-        return CypherExpression(self, x, '%')
-
-    def __rmod__(self, x):        # x % self
-        return CypherExpression(self, x, '%', reverse=True)
-
-    def __pow__(self, x):         # self ** x
-        return CypherExpression(self, x, '^')
-
-    def __rpow__(self, x):        # x ** self
-        return CypherExpression(self, x, '^', reverse=True)
-
-    # Comparison Operators
-    def __eq__(self, x):          # self == x
-        if x is self: return True
-        return CypherExpression(self, x, '=')
-
-    def __ne__(self, x):          # self != x
-        return CypherExpression(self, x, '<>')
-
-    def __lt__(self, x):          # self < x
-        return CypherExpression(self, x, '<')
-
-    def __gt__(self, x):          # self > x
-        return CypherExpression(self, x, '>')
-
-    def __le__(self, x):          # self <= x
-        return CypherExpression(self, x, '<=')
-
-    def __ge__(self, x):          # self >= x
-        return CypherExpression(self, x, '>=')

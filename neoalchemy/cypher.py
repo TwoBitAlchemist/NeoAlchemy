@@ -2,13 +2,13 @@ from __future__ import unicode_literals
 
 import six
 
-from .base import CypherExpression, Property
+from .base import Property
+from .operations import CypherExpression, ComparisonExpression, QueryParams
 
 
 class CypherQuery(list):
     def __init__(self, graph_obj, use_full_pattern=False):
-        self.params = {}
-        self.__extra_params = 0
+        self.params = QueryParams()
 
         try:
             verb = self.verb
@@ -73,24 +73,19 @@ class CypherQuery(list):
         self.append('WITH ' + ', '.join(arg.var for arg in args))
         return self
 
-    def set_param(self, name, value):
-        if name is None and value is None:
-            return
-        if name is None or self.params.get(name) is not None:
-            name = 'param%i' % self.__extra_params
-            self.__extra_params += 1
-        self.params[name] = value
-        return name
-
     def _add_expression(self, expr):
         if isinstance(expr, Property):
             prop = expr
-            expr = CypherExpression(prop, prop.value, '=')
+            expr = ComparisonExpression(prop, prop.value, '=')
         else:
             if not isinstance(expr, CypherExpression):
                 raise ValueError('Must be CypherExpression or Property')
 
-        expr.param = self.set_param(expr.param, expr.value)
+        for key, value in expr.compile().params.items():
+            self.params[key] = value
+            if self.params.last_key != key:
+                expr.replace(key, self.params.last_key)
+
         return str(expr)
 
     def __str__(self):
