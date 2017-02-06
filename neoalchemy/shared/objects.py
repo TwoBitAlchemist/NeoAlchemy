@@ -2,8 +2,8 @@ from weakref import WeakKeyDictionary
 
 import six
 
-from .exceptions import ImmutableAttributeError
-from .operations import CypherExpression, CypherOperatorInterface
+from ..cypher.operations import CypherExpression, CypherOperatorInterface
+from ..exceptions import ImmutableAttributeError
 
 try:
     str = unicode

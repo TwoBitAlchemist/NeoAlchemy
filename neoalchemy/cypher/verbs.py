@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import six
 
-from .base import Property
+from ..shared.objects import Property
 from .operations import CypherExpression, ComparisonExpression, QueryParams
 
 

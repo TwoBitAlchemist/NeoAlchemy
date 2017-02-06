@@ -1,9 +1,8 @@
 import six
 
-from .base import GraphObject, SetOnceDescriptor
-from .cypher import Create, Match, Merge
+from .cypher import Create, Match, Merge, Exists
 from .exceptions import DetachedObjectError
-from .operations import Exists
+from .shared.objects import GraphObject, SetOnceDescriptor
 
 try:
     str = unicode

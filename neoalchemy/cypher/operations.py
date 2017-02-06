@@ -256,15 +256,15 @@ class Min(CypherFunction):
     pass
 
 
+class None_(CypherFunction):
+    pass
+
+
 class Single(CypherFunction):
     pass
 
 
 class Sum(CypherFunction):
-    pass
-
-
-class None_(CypherFunction):
     pass
 
 

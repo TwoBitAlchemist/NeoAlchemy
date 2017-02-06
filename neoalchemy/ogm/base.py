@@ -1,9 +1,9 @@
 from six import add_metaclass
 
-from .base import Property
-from .cypher import Create, Match
-from .exceptions import DetachedObjectError, UnboundedWriteOperation
-from .primitives import Node
+from ..cypher import Create, Match
+from ..primitives import Node
+from ..exceptions import DetachedObjectError, UnboundedWriteOperation
+from ..shared.objects import Property
 
 
 class PropertyDescriptor(object):
