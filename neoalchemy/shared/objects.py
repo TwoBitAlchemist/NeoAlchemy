@@ -44,7 +44,7 @@ class GraphObject(object):
         self.graph = graph
 
         for prop_name, prop in properties.items():
-            if not isinstance(prop, Property):
+            if not isinstance(prop, (Property, Relation)):
                 prop_val = prop
                 prop = Property()
                 prop.value = prop_val
@@ -111,23 +111,23 @@ class GraphObject(object):
         return '<%s: %s>' % (self.__class__.__name__, self.pattern())
 
 
+def valid_graph_obj(obj):
+    if not isinstance(obj, GraphObject):
+        raise ValueError('Property can only be bound to '
+                         'Node or Relationship.')
+    return obj
+
+
 class PropertyMeta(type):
     def __init__(cls, class_name, bases, attrs):
         cls.name = SetOnceDescriptor('name', type=str)
         cls.type = SetOnceDescriptor('type')
         cls.default = SetOnceDescriptor('default')
-        cls.obj = SetOnceDescriptor('obj', type=PropertyMeta.valid_graph_obj)
+        cls.obj = SetOnceDescriptor('obj', type=valid_graph_obj)
         for attr in ('unique', 'indexed', 'required',
                      'primary_key', 'read_only'):
             setattr(cls, attr, SetOnceDescriptor(attr, type=bool))
         super(PropertyMeta, cls).__init__(class_name, bases, attrs)
-
-    @staticmethod
-    def valid_graph_obj(obj):
-        if not isinstance(obj, GraphObject):
-            raise ValueError('Property can only be bound to '
-                             'Node or Relationship.')
-        return obj
 
 
 @six.add_metaclass(PropertyMeta)
@@ -220,3 +220,55 @@ class Property(CypherOperatorInterface):
 
     def __hash__(self):
         return id(self)
+
+
+class RelationMeta(type):
+    def __init__(cls, class_name, bases, attrs):
+        cls.type = SetOnceDescriptor('type', type=str)
+        cls.obj = SetOnceDescriptor('obj', type=valid_graph_obj)
+        for attr in ('unique', 'required',
+                     'unbound_start', 'unbound_end'):
+            setattr(cls, attr, SetOnceDescriptor(attr, type=bool))
+        super(RelationMeta, cls).__init__(class_name, bases, attrs)
+
+
+@six.add_metaclass(RelationMeta)
+class Relation(object):
+    def __init__(self, type_, obj=None, unique=False, required=False,
+                 unbound_start=False, unbound_end=False, unbound=False):
+        self.type = type
+        self.obj = obj
+        self.unique = unique
+        self.required = required
+        if unbound:
+            self.unbound_start = self.unbound_end = True
+        else:
+            self.unbound_start = unbound_start
+            self.unbound_end = unbound_end
+
+    def add(self, related):
+        return self.obj.add_relation(self.type, related, **self.unbound_args)
+
+    def drop(self, related):
+        return self.obj.drop_relation(self.type, related, **self.unbound_args)
+
+    def match(self, *labels, **properties):
+        return self.obj.get_relations(self.type, *labels, **properties)
+
+    @property
+    def unbound_args(self):
+        return {
+            'unbound': self.unbound,
+            'unbound_start': self.unbound_start,
+            'unbound_end': self.unbound_end,
+        }
+
+
+class OneToManyRelation(Relation):
+    def __init__(self, type_, **kw):
+        super(OneToManyRelation, self).__init__(type_, unbound_start=False,
+                                                unbound=False, **kw)
+
+
+class ManyToManyRelation(Relation):
+    pass

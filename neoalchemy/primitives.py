@@ -46,6 +46,10 @@ class Node(GraphObject):
             copy[key].value = value
         return copy
 
+    @property
+    def __node__(self):
+        return self
+
     def pattern(self, inline_props=False):
         if inline_props and self.bound_keys:
             props = self.inline_properties

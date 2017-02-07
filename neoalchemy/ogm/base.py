@@ -1,7 +1,7 @@
 from six import add_metaclass
 
-from ..cypher import Create, Match
-from ..primitives import Node
+from ..cypher import Create, Match, Merge, Count
+from ..primitives import Node, Relationship
 from ..exceptions import DetachedObjectError, UnboundedWriteOperation
 from ..shared.objects import Property
 
@@ -85,7 +85,7 @@ class OGMBase(object):
         if not self.is_bound:
             self.bind()
             if not self.bound_keys and not force:
-                extra_info = 'Use delete_all() or delete(force=True)'
+                extra_info = 'To override, use delete_all() or force=True.'
                 raise UnboundedWriteOperation(self, extra_info)
 
         match = Match(self.__node__).delete(self.__node__, detach=detach)
@@ -122,3 +122,50 @@ class OGMBase(object):
             .return_(self.__node__)
         )
         return self.graph.run(str(merge), **merge.params)
+
+    def init_relation(self, rel_type, related,
+                      unbound_start=False, unbound_end=False, unbound=False):
+        if unbound:
+            unbound_start = unbound_end = True
+        rel = Relationship(rel_type)
+        rel.start_node = self.__node__.copy(var='self')
+        if not rel.start_node.is_bound:
+            rel.start_node.bind()
+            if not rel.start_node.bound_keys and not unbound_start:
+                extra_info = 'To override, use unbound_start=True.'
+                raise UnboundedWriteOperation(rel.start_node, extra_info)
+        rel.end_node = related.__node__.copy(var='related')
+        if not rel.end_node.is_bound:
+            rel.end_node.bind()
+            if not rel.end_node.bound_keys and not unbound_end:
+                extra_info = 'To override, use unbound_end=True.'
+                raise UnboundedWriteOperation(rel.end_node, extra_info)
+        return rel
+
+    def add_relation(self, rel_type, related, **kw):
+        rel = self.init_relation(rel_type, related, **kw)
+        merge = (
+            (Match(rel.start_node) &
+             Merge(rel.end_node) &
+             Merge(rel))
+            .return_(Count(rel))
+        )
+        return self.graph.run(str(merge), **merge.params)
+
+    def drop_relation(self, rel_type, related, **kw):
+        rel = self.init_relation(rel_type, related, **kw)
+        match = (
+            (Match(rel.start_node) &
+             Match(rel.end_node) &
+             Match(rel))
+            .delete(rel)
+            .return_(Count(rel))
+        )
+        return self.graph.run(str(match), **match.params)
+
+    def get_relations(self, rel_type, *labels, **properties):
+        rel = Relationship(rel_type, depth=properties.pop('depth', None))
+        rel.start_node = self.__node__.copy(var='self')
+        rel.end_node = Node(*labels, **properties).bind(*properties)
+        match = Match(rel).return_(rel.end_node)
+        return self.graph.run(str(match), **match.params)
