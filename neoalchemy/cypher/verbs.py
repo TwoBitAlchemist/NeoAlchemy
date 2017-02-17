@@ -83,7 +83,7 @@ class CypherQuery(list):
 
         for key, value in expr.compile().params.items():
             self.params[key] = value
-            if self.params.last_key != key:
+            if self.params.last_key.startswith('param'):
                 expr.replace(key, self.params.last_key)
 
         return str(expr)

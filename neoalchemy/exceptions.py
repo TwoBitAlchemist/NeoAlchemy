@@ -18,4 +18,4 @@ class UnboundedWriteOperation(RuntimeError):
         error %= obj.__class__.__name__
         if error_info:
             error = '%s %s' % (error, error_info)
-        super(UnboundDelete, self).__init__(error % obj.__class__.__name__)
+        super(UnboundedWriteOperation, self).__init__(error)

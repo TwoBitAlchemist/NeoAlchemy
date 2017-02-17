@@ -5,8 +5,6 @@ from neoalchemy import Node, Property
 
 
 def test_simple_labeled_node():
-    with pytest.raises(ValueError):  # no label
-        node = Node()
     node = Node('Node')
     assert node.labels == ('Node',)
     # cannot reset label once created

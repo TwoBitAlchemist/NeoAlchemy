@@ -5,7 +5,58 @@ providing a convenient auto-connection during initialization.
 from collections import deque, namedtuple
 import warnings
 
-from neo4j.v1 import GraphDatabase, basic_auth
+from neo4j.v1 import (GraphDatabase, basic_auth, Record,
+                      Node as NeoNode, Relationship as NeoRelationship)
+
+from .primitives import Node, Relationship
+
+
+class Rehydrator(object):
+    def __init__(self, statement_result, graph):
+        self.__result_set = iter(statement_result)
+        self.__schema = dict(graph.schema.classes)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        record = next(self.__result_set)
+        values = []
+        for value in record.values():
+            if isinstance(value, NeoNode):
+                try:
+                    cls = self.__schema[tuple(value.labels)]
+                except KeyError:
+                    values.append(Node(*value.labels, **value.properties))
+                else:
+                    values.append(cls(**value.properties))
+            elif isinstance(value, NeoRelationship):
+                values.append(Relationship(value.type, **value.properties))
+            else:
+                values.append(value)
+        return Record(record.keys(), values)
+
+    def next(self):
+        return self.__next__()
+
+    @property
+    def one(self):
+        try:
+            record = next(self)
+        except StopIteration:
+            return None
+        else:
+            try:
+                next(self)
+            except StopIteration:
+                pass
+            else:
+                warnings.warn('More than one result returned. Data discarded!')
+
+        if len(record.keys()) > 1:
+            return record
+        else:
+            return record[0]
 
 
 class QueryLog(deque):
@@ -72,20 +123,47 @@ class Schema(object):
         self.__labels = None
         self.__reflect = Reflect(graph)
         self.__schema = set()
+        self.__hierarchy = dict()
 
-    def add(self, nodetype):
+    def add(self, obj):
         """
-        Add a NodeType to the schema, if not already present.
+        Add the object's schema, if not already present.
         """
-        if nodetype.LABEL in self.__schema:
+        node = obj.__node__
+        if node.type in self.__schema:
             return
 
-        self.__schema.add(nodetype.LABEL)
-        schema = self.indexes() + self.constraints()
+        self.__schema.add(node.type)
+        if obj.__node__ is not obj:
+            self.__hierarchy[node.labels] = obj
 
-        for index_or_constraint in nodetype.schema:
+        schema = self.indexes() + self.constraints()
+        for index_or_constraint in node.schema:
             if index_or_constraint not in schema:
                 self.__graph.query('CREATE ' + index_or_constraint)
+
+    def drop(self, obj):
+        """
+        Drop the object's schema, if present.
+        """
+        node = obj.__node__
+        if node.type in self.__schema:
+            self.__schema.remove(node.type)
+
+        schema = self.indexes() + self.constraints()
+        for index_or_constraint in node.schema:
+            if index_or_constraint in schema:
+                self.__graph.query('DROP ' + index_or_constraint)
+
+    def drop_all(self):
+        for constraint in self.constraints():
+            self.__graph.query('DROP ' + constraint)
+        for index in self.__reflect.indexes():
+            self.__graph.query('DROP ' + index)
+
+    @property
+    def classes(self):
+        return self.__hierarchy.items()
 
     def constraints(self):
         """
@@ -151,7 +229,7 @@ class Graph(GraphDatabase):
     def schema(self):
         return self.__schema
 
-    def connect(self, url=None, user=None, password=None):
+    def connect(self, url=None, user=None, password=None, **kw):
         """
         Parse a Neo4J URL and attempt to connect using Bolt
 
@@ -176,11 +254,11 @@ class Graph(GraphDatabase):
         try:
             credentials, url = url.split('@')
         except ValueError:
-            auth_token = basic_auth(user, password)
+            kw['auth'] = basic_auth(user, password)
         else:
-            auth_token = basic_auth(*credentials.split(':', 1))
+            kw['auth'] = basic_auth(*credentials.split(':', 1))
 
-        self.driver = GraphDatabase.driver('bolt://%s' % url, auth=auth_token)
+        self.driver = GraphDatabase.driver('bolt://%s' % url, **kw)
 
     def delete_all(self):
         """MATCH (all) DETACH DELETE all"""

@@ -1,15 +1,23 @@
-from six import add_metaclass
+import six
 
 from ..cypher import Create, Match, Merge, Count
+from ..exceptions import (DetachedObjectError, ImmutableAttributeError,
+                          UnboundedWriteOperation)
+from ..graph import Rehydrator
 from ..primitives import Node, Relationship
-from ..exceptions import DetachedObjectError, UnboundedWriteOperation
+from .relations import Relation
 from ..shared.objects import Property
 
 
-class PropertyDescriptor(object):
-    def __init__(self, prop_name):
-        self.name = prop_name
+class OGMDescriptor(object):
+    def __init__(self, name):
+        self.name = name
 
+    def __delete__(self, instance):
+        raise AttributeError("Can't remove attribute.")
+
+
+class PropertyDescriptor(OGMDescriptor):
     def __get__(self, instance, owner):
         if instance is None:
             return owner.__node__[self.name]
@@ -21,12 +29,17 @@ class PropertyDescriptor(object):
             instance.__changed__[self.name] = (prop.value, value)
         prop.value = value
 
-    def __delete__(self, instance):
-        raise AttributeError("Can't remove attribute.")
+
+class RelationDescriptor(OGMDescriptor):
+    def __get__(self, instance, owner):
+        return self.name
+
+    def __set__(self, instance, value):
+        raise ImmutableAttributeError('__relations__', instance)
 
 
 class OGMMeta(type):
-    def __new__(mcs, class_name, bases, attrs):
+    def __init__(cls, class_name, bases, attrs):
         labels = []
         properties = {}
         for base in bases:
@@ -40,25 +53,40 @@ class OGMMeta(type):
         if not attrs.get('__abstract__'):
             labels.append(attrs.get('LABEL') or class_name)
 
-        properties.update({k: v for k, v in attrs.items()
-                           if isinstance(v, Property)})
+        relations = set()
+        for attr_name, attr in attrs.items():
+            if isinstance(attr, Property):
+                properties[attr_name] = attr
+            elif isinstance(attr, Relation):
+                relations.add(attr_name)
+
         for prop_name in properties:
-            attrs[prop_name] = PropertyDescriptor(prop_name)
-        attrs['__node__'] = Node(*labels, **properties)
+            setattr(cls, prop_name, PropertyDescriptor(prop_name))
 
-        if attrs.get('graph') is not None:
-            attrs['graph'].schema.add(attrs['__node__'])
-            attrs['__node__'].graph = attrs['graph']
+        cls.__relations__ = RelationDescriptor(tuple(relations))
+        cls.__node__ = Node(*labels, **properties)
 
-        return super(OGMMeta, mcs).__new__(mcs, class_name, bases, attrs)
+        try:
+            graph = cls.graph
+        except AttributeError:
+            pass
+        else:
+            graph.schema.add(cls)
+            cls.__node__.graph = graph
 
 
-@add_metaclass(OGMMeta)
+@six.add_metaclass(OGMMeta)
 class OGMBase(object):
     def __init__(self, **properties):
         self.__changed__ = {}
         for prop_name, value in properties.items():
-            self.__node__[prop_name].value = value
+            try:
+                self.__node__[prop_name].value = value
+            except KeyError:
+                raise ValueError("Unrecognized argument: '%s'" % prop_name)
+        for rel_name in self.__relations__:
+            rel = getattr(self.__class__, rel_name)
+            setattr(self, rel_name, rel.copy(obj=self))
 
     def bind(self, *keys):
         self.__node__.bind(*keys)
@@ -76,7 +104,7 @@ class OGMBase(object):
             raise DetachedObjectError(self, action='create')
 
         create = Create(self.__node__)
-        self.graph.run(str(create), **create.params)
+        self.graph.query(create, **create.params)
         return self
 
     def delete(self, detach=True, force=False):
@@ -89,7 +117,7 @@ class OGMBase(object):
                 raise UnboundedWriteOperation(self, extra_info)
 
         match = Match(self.__node__).delete(self.__node__, detach=detach)
-        self.graph.run(str(match), **match.params)
+        self.graph.query(match, **match.params)
 
     def delete_all(self):
         self.bind(None)
@@ -102,7 +130,8 @@ class OGMBase(object):
 
         matched = self.__node__.copy(**properties)
         match = Match(matched).return_(matched)
-        return self.graph.run(str(match), **match.params)
+        return Rehydrator(self.graph.query(match, **match.params),
+                          self.graph)
 
     def merge(self, singleton=False):
         if self.graph is None:
@@ -113,21 +142,19 @@ class OGMBase(object):
                 extra_info = 'To merge a singleton pass singleton=True.'
                 raise UnboundedWriteOperation(self, extra_info)
 
-        merge = (
-            Merge(self.__node__)
-                .on_create()
-                    .set(*self.__node__.values())
-                .on_match()
-                    .set(*(self.__node__[key] for key in self.__changed__))
-            .return_(self.__node__)
-        )
-        return self.graph.run(str(merge), **merge.params)
+        merge = Merge(self.__node__).on_create().set(*self.__node__.values())
+        if self.__changed__:
+            (merge.on_match()
+                  .set(*(self.__node__[key] for key in self.__changed__)))
+        merge.return_(self.__node__)
+        return Rehydrator(self.graph.query(merge, **merge.params),
+                          self.graph).one
 
-    def init_relation(self, rel_type, related,
-                      unbound_start=False, unbound_end=False, unbound=False):
-        if unbound:
-            unbound_start = unbound_end = True
-        rel = Relationship(rel_type)
+    def init_relation(self, rel_type, related, **kw):
+        unbound = kw.pop('unbound', False)
+        unbound_start, unbound_end = (unbound or kw.pop(k, False)
+                                      for k in ('unbound_start', 'unbound_end'))
+        rel = Relationship(rel_type, **kw)
         rel.start_node = self.__node__.copy(var='self')
         if not rel.start_node.is_bound:
             rel.start_node.bind()
@@ -150,7 +177,7 @@ class OGMBase(object):
              Merge(rel))
             .return_(Count(rel))
         )
-        return self.graph.run(str(merge), **merge.params)
+        return self.graph.query(merge, **merge.params)
 
     def drop_relation(self, rel_type, related, **kw):
         rel = self.init_relation(rel_type, related, **kw)
@@ -161,11 +188,12 @@ class OGMBase(object):
             .delete(rel)
             .return_(Count(rel))
         )
-        return self.graph.run(str(match), **match.params)
+        return self.graph.query(match, **match.params)
 
     def get_relations(self, rel_type, *labels, **properties):
         rel = Relationship(rel_type, depth=properties.pop('depth', None))
         rel.start_node = self.__node__.copy(var='self')
         rel.end_node = Node(*labels, **properties).bind(*properties)
         match = Match(rel).return_(rel.end_node)
-        return self.graph.run(str(match), **match.params)
+        return Rehydrator(self.graph.query(match, **match.params),
+                          self.graph)

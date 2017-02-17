@@ -23,15 +23,17 @@ class Node(GraphObject):
         var = properties.pop('var', 'node')
         super(Node, self).__init__(**properties)
         if len(labels) == 1 and isinstance(labels[0], Node):
-            self.labels = labels[0].labels
-            self.type = labels[0].type
-            self.var = labels[0].var
+            node = labels[0]
+            self.labels = node.labels
+            self.type = node.type
+            self.var = node.var
         else:
-            if not labels:
-                raise ValueError('Node must have at least one label.')
             self.labels = labels
-            self.type = labels[-1]
             self.var = var
+            try:
+                self.type = labels[-1]
+            except IndexError:
+                self.type = None
 
     def copy(self, shallow=False, **properties):
         var = properties.pop('var', self.var)
