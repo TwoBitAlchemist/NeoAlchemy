@@ -4,9 +4,9 @@ import os
 import pytest
 
 from neoalchemy import Graph
-from tests.ogm.MockProject.customers import Customer
-from tests.ogm.MockProject.graph import FakeGraph
-from tests.ogm.MockProject.orders import Order
+from MockProject.customers import Customer
+from MockProject.graph import FakeGraph
+from MockProject.orders import Order
 
 
 graph_test = pytest.mark.skipif(os.environ.get('NEOALCHEMY_TEST_GRAPH') is None,
