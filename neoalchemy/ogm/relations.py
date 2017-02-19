@@ -2,7 +2,7 @@ from weakref import WeakKeyDictionary
 
 import six
 
-from ..shared.objects import GraphObject, SetOnceDescriptor
+from ..shared.objects import SetOnceDescriptor
 
 
 class ManyToOneDescriptor(object):
@@ -28,26 +28,19 @@ class RelationMeta(type):
     def __init__(cls, class_name, bases, attrs):
         cls.type = SetOnceDescriptor('type', type=str)
         cls.backref = SetOnceDescriptor('backref', type=str)
-        cls.obj = SetOnceDescriptor('obj', type=RelationMeta.valid_graph_obj)
+        cls.obj = SetOnceDescriptor('obj')
         cls.restricted_types = SetOnceDescriptor('restricted_types',
                                                  type=tuple)
         for attr in ('unbound_start', 'unbound_end'):
             setattr(cls, attr, SetOnceDescriptor(attr, type=bool))
         super(RelationMeta, cls).__init__(class_name, bases, attrs)
 
-    @staticmethod
-    def valid_graph_obj(obj):
-        if not isinstance(obj, GraphObject):
-            raise ValueError('Relation can only be bound to '
-                             'Node or Relationship.')
-        return obj
-
 
 @six.add_metaclass(RelationMeta)
 class Relation(object):
     def __init__(self, type_, obj=None, backref=None,
                  restrict_types=(), **unbound_args):
-        self.type = type
+        self.type = type_
         self.obj = obj
         self.backref = backref
         unbound = unbound_args['unbound'] = bool(unbound_args.get('unbound'))
@@ -64,7 +57,8 @@ class Relation(object):
 
     def add(self, related):
         if self.restricted_types:
-            if not isinstance(related, self.restricted_types):
+            if not any(label in related.__node__.labels
+                       for label in self.restricted_types):
                 raise ValueError("Related object is '%r' but must be one of: "
                                  "'%s'" % (related,
                                            ', '.join(self.restricted_types)))

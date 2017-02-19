@@ -4,7 +4,7 @@ from .graph import OGMTestClass
 
 
 class Customer(OGMTestClass):
-    username = Property(primary_key=True)
+    username = Property()
     email = Property(primary_key=True)
     addresses = ManyToManyRelation('HAS_ADDRESS', restrict_types=('Address',),
                                    backref='customer')

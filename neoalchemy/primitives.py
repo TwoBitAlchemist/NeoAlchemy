@@ -21,9 +21,13 @@ class NodeMeta(type):
 class Node(GraphObject):
     def __init__(self, *labels, **properties):
         var = properties.pop('var', 'node')
-        super(Node, self).__init__(**properties)
         if len(labels) == 1 and isinstance(labels[0], Node):
             node = labels[0]
+            properties.update({key: prop.copy() for key, prop in node.items()})
+        else:
+            node = None
+        super(Node, self).__init__(**properties)
+        if node is not None:
             self.labels = node.labels
             self.type = node.type
             self.var = node.var

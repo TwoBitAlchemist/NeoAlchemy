@@ -134,13 +134,13 @@ class Schema(object):
         if not node.type or node.type in self.__schema:
             return
 
-        def get_or_defer(type_):
+        def get_or_defer(type_, rel=None):
             try:
                 type_ = self.__hierarchy[type_]
             except KeyError:
                 if type_ not in self.__hierarchy.values():
-                    deferred = self.__relations.setdefault(type_, [])
-                    deferred.append(rel)
+                    if rel is not None:
+                        self.__relations.setdefault(type_, []).append(rel)
                     return
             return type_
 
@@ -162,7 +162,7 @@ class Schema(object):
             for attr in obj.__relations__:
                 rel = getattr(obj, attr)
                 for type_ in rel.restricted_types:
-                    type_ = get_or_defer(type_)
+                    type_ = get_or_defer(type_, rel)
                     if type_ is not None:
                         rel.create_backref(type_)
 

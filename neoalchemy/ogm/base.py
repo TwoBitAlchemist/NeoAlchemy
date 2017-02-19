@@ -86,10 +86,10 @@ class OGMBase(object):
                 raise ValueError("Unrecognized argument: '%s'" % prop_name)
         for rel_name in self.__relations__:
             rel = getattr(self.__class__, rel_name)
-            setattr(self, rel_name, rel.copy(obj=self.__node__))
+            setattr(self, rel_name, rel.copy(obj=self))
 
     def bind(self, *keys):
-        self.__node__.bind(*keys)
+        return self.__node__.bind(*keys)
 
     @property
     def bound_keys(self):

@@ -4,6 +4,7 @@ import os
 import pytest
 
 from neoalchemy import Graph
+from tests.ogm.MockProject.customers import Customer
 from tests.ogm.MockProject.graph import FakeGraph
 from tests.ogm.MockProject.orders import Order
 
@@ -25,5 +26,12 @@ def clear_graph(graph):
 
 
 @graph_test
-def test_make_an_order(clear_graph):
+def test_a_customer_places_an_order(clear_graph):
+    customer = Customer(username='seregon', email='seregon@gmail.com').merge()
+    assert isinstance(customer, Customer)
+    assert customer.username == 'seregon'
+    assert customer.email == 'seregon@gmail.com'
     order = Order().merge()
+    assert isinstance(order, Order)
+    assert order.id is not None
+    customer.orders.add(order)
