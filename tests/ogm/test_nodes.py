@@ -11,6 +11,10 @@ from neoalchemy.graph import Query, Schema
 from neoalchemy.validators import isodate, UUID
 
 
+graph_test = pytest.mark.skipif(os.environ.get('NEOALCHEMY_TEST_GRAPH') is None,
+                                reason='No graph connection available.')
+
+
 class FakeQuery(Query):
     def run(self, query, **params):
         self.log(query, params)
@@ -72,7 +76,8 @@ class InternationalAddress(Address):
 class Customer(OGMTestClass):
     username = Property(primary_key=True)
     email = Property(primary_key=True)
-    addresses = ManyToManyRelation(Address)
+    addresses = ManyToManyRelation('HAS_ADDRESS', restrict_types=('Address',),
+                                   backref='customer')
     orders = OneToManyRelation('PLACED_ORDER', restrict_types=('Order',),
                                backref='customer')
 
@@ -82,7 +87,6 @@ class Order(OGMTestClass):
                   indexed=True)
 
 
-graph_test = pytest.mark.skipif(os.environ.get('NEOALCHEMY_TEST_GRAPH') is None,
-                                reason='No graph connection available.')
+@graph_test
 def test_make_an_order(clear_graph):
     order = Order().merge()

@@ -124,18 +124,47 @@ class Schema(object):
         self.__reflect = Reflect(graph)
         self.__schema = set()
         self.__hierarchy = dict()
+        self.__relations = dict()
 
     def add(self, obj):
         """
         Add the object's schema, if not already present.
         """
         node = obj.__node__
-        if node.type in self.__schema:
+        if not node.type or node.type in self.__schema:
             return
+
+        def get_or_defer(type_):
+            try:
+                type_ = self.__hierarchy[type_]
+            except KeyError:
+                if type_ not in self.__hierarchy.values():
+                    deferred = self.__relations.setdefault(type_, [])
+                    deferred.append(rel)
+                    return
+            return type_
 
         self.__schema.add(node.type)
         if obj.__node__ is not obj:
             self.__hierarchy[node.labels] = obj
+            if node.type:
+                self.__hierarchy[node.type] = obj
+
+            # add backrefs to deferred types
+            deferred_types = list(self.__relations.keys())
+            for type_ in deferred_types:
+                type_class = get_or_defer(type_)
+                if type_class is not None:
+                    for rel in self.__relations[type_]:
+                        rel.create_backref(type_class)
+
+            # add backrefs to new types, or defer them
+            for attr in obj.__relations__:
+                rel = getattr(obj, attr)
+                for type_ in rel.restricted_types:
+                    type_ = get_or_defer(type_)
+                    if type_ is not None:
+                        rel.create_backref(type_)
 
         schema = self.indexes() + self.constraints()
         for index_or_constraint in node.schema:
