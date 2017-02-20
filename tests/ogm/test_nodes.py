@@ -32,6 +32,17 @@ def test_a_customer_places_an_order(clear_graph):
     assert customer.username == 'seregon'
     assert customer.email == 'seregon@gmail.com'
     order = Order().merge()
+    order_id = order.id
     assert isinstance(order, Order)
     assert order.id is not None
     customer.orders.add(order)
+    assert len(list(customer.orders.match())) == 1
+    customer = Customer.match(email='seregon@gmail.com').one
+    assert isinstance(customer, Customer)
+    assert customer.username == 'seregon'
+    assert customer.email == 'seregon@gmail.com'
+    assert len(list(customer.orders.match())) == 1
+    order = customer.orders.match().one
+    assert isinstance(order, Order)
+    assert order.id == order_id
+    assert order.customer.email == 'seregon@gmail.com'

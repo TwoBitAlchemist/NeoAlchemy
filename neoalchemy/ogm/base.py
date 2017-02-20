@@ -191,9 +191,14 @@ class OGMBase(object):
         return self.graph.query(match, **match.params)
 
     def get_relations(self, rel_type, *labels, **properties):
+        rev = properties.pop('rev', False)
         rel = Relationship(rel_type, depth=properties.pop('depth', None))
         rel.start_node = self.__node__.copy(var='self')
         rel.end_node = Node(*labels, **properties).bind(*properties)
-        match = Match(rel).return_(rel.end_node)
+        match = Match(rel)
+        if rev:
+            match.return_(rel.start_node)
+        else:
+            match.return_(rel.end_node)
         return Rehydrator(self.graph.query(match, **match.params),
                           self.graph)

@@ -1,7 +1,6 @@
-from weakref import WeakKeyDictionary
-
 import six
 
+from ..exceptions import ImmutableAttributeError
 from ..shared.objects import SetOnceDescriptor
 
 
@@ -9,19 +8,18 @@ class ManyToOneDescriptor(object):
     def __init__(self, name, relation):
         self.name = name
         self.relation = relation.copy()
-        self.values = WeakKeyDictionary()
 
     def __get__(self, instance, owner):
         if instance is None:
             self.relation
 
-        return self.values.get(instance)
+        return instance.get_relations(self.relation.type, rev=True).one
 
     def __set__(self, instance, value):
-        self.values[instance] = value
+        raise ImmutableAttributeError(self.name, instance)
 
     def __delete__(self, instance):
-        raise AttributeError("Can't remove attribute.")
+        raise ImmutableAttributeError(self.name, instance)
 
 
 class RelationMeta(type):
