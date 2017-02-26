@@ -6,7 +6,7 @@ import pytest
 from neoalchemy import Graph
 from MockProject.customers import Customer
 from MockProject.graph import FakeGraph
-from MockProject.orders import Order
+from MockProject.orders import Order, OrderItem
 
 
 graph_test = pytest.mark.skipif(os.environ.get('NEOALCHEMY_TEST_GRAPH') is None,
@@ -46,3 +46,8 @@ def test_a_customer_places_an_order(clear_graph):
     assert isinstance(order, Order)
     assert order.id == order_id
     assert order.customer.email == 'seregon@gmail.com'
+    item = OrderItem(line_item='bread', price='2.00').create()
+    other_item = OrderItem(line_item='milk', price='3.00').create()
+    order.items.add(item)
+    order.items.add(other_item)
+    assert len(list(order.items.match())) == 2

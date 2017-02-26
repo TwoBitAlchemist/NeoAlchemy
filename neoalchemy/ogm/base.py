@@ -79,6 +79,7 @@ class OGMMeta(type):
 class OGMBase(object):
     def __init__(self, **properties):
         self.__changed__ = {}
+        self.__node__ = self.__node__.copy()
         for prop_name, value in properties.items():
             try:
                 self.__node__[prop_name].value = value
@@ -173,7 +174,7 @@ class OGMBase(object):
         rel = self.init_relation(rel_type, related, **kw)
         merge = (
             (Match(rel.start_node) &
-             Merge(rel.end_node) &
+             Match(rel.end_node) &
              Merge(rel))
             .return_(Count(rel))
         )
@@ -193,12 +194,17 @@ class OGMBase(object):
     def get_relations(self, rel_type, *labels, **properties):
         rev = properties.pop('rev', False)
         rel = Relationship(rel_type, depth=properties.pop('depth', None))
-        rel.start_node = self.__node__.copy(var='self')
-        rel.end_node = Node(*labels, **properties).bind(*properties)
-        match = Match(rel)
         if rev:
-            match.return_(rel.start_node)
+            rel.start_node = Node(*labels, **properties).bind(*properties)
+            rel.end_node = self.__node__.copy(var='self')
+            ret = rel.start_node
         else:
-            match.return_(rel.end_node)
+            rel.start_node = self.__node__.copy(var='self')
+            rel.end_node = Node(*labels, **properties).bind(*properties)
+            ret = rel.end_node
+        match = (
+            (Match(rel.start_node) & Match(rel.end_node) & Match(rel))
+             .return_(ret)
+        )
         return Rehydrator(self.graph.query(match, **match.params),
                           self.graph)

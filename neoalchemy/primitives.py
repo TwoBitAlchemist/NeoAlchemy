@@ -57,11 +57,12 @@ class Node(GraphObject):
         return self
 
     def pattern(self, inline_props=False):
+        labels = ':`%s`' % '`:`'.join(self.labels) if self.labels else ''
         if inline_props and self.bound_keys:
             props = self.inline_properties
-            return '(%s:`%s` %s)' % (self.var, '`:`'.join(self.labels), props)
+            return '(%s%s %s)' % (self.var, labels, props)
         else:
-            return '(%s:`%s`)' % (self.var, '`:`'.join(self.labels))
+            return '(%s%s)' % (self.var, labels)
 
     @property
     def schema(self):

@@ -28,10 +28,20 @@ class RelationMeta(type):
         cls.backref = SetOnceDescriptor('backref', type=str)
         cls.obj = SetOnceDescriptor('obj')
         cls.restricted_types = SetOnceDescriptor('restricted_types',
-                                                 type=tuple)
+                                                 type=RelationMeta.restricted)
         for attr in ('unbound_start', 'unbound_end'):
             setattr(cls, attr, SetOnceDescriptor(attr, type=bool))
         super(RelationMeta, cls).__init__(class_name, bases, attrs)
+
+    @staticmethod
+    def restricted(types):
+        def get_type(t):
+            try:
+                return t.__node__.type
+            except AttributeError:
+                return t
+
+        return tuple(get_type(t) for t in types)
 
 
 @six.add_metaclass(RelationMeta)
@@ -57,9 +67,10 @@ class Relation(object):
         if self.restricted_types:
             if not any(label in related.__node__.labels
                        for label in self.restricted_types):
+                restricted_types = map(str, self.restricted_types)
                 raise ValueError("Related object is '%r' but must be one of: "
                                  "'%s'" % (related,
-                                           ', '.join(self.restricted_types)))
+                                           ', '.join(restricted_types)))
         return self.obj.add_relation(self.type, related, **self.__unbound_args)
 
     def drop(self, related):
