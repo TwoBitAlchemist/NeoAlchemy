@@ -25,7 +25,7 @@ version 3.0 or higher! If you don't have an environment set up, consider
    intro
    apis
    query-builder
-   schema-ORM
+   schema-OGM
    schema-classes
    querybuilder-classes
    ORM-classes
