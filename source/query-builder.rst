@@ -58,7 +58,7 @@ We can see the query this generates by printing it::
 NeoAlchemy has automatically applied the ``Person`` label and created
 parameters associated with each of the properties we defined. We can see
 the current values for each parameter by inspecting the
-:py:attr:`~neoalchemy.cypher.CypherVerb.params` dict::
+:py:attr:`~neoalchemy.cypher.SimpleQuery.params` dict::
 
     >>> create.params
     {'node_age': None, 'node_hair_color': None, 'node_name': None}
@@ -98,26 +98,25 @@ Match
 Now that we've experimented a bit with writing to the database, let's take a
 look at how to read data from it::
 
-    from neoalchemy.cypher import Match
+    from neoalchemy import Match
 
-Match has a very similar interface to Create. For a simple use case, we get
-almost identical results::
+Match has a very similar interface to Create. In the simplest case, Match looks
+only at labels::
 
-    >>> match = Match(Person)
+    >>> match = Match(person)
     >>> print(match)
-    MATCH (n:Person {hair_color: {hair_color_n}, name: {name_n}, age: {age_n}})
+    MATCH (n:`Person`)
 
-...but this isn't a very interesting ``MATCH`` statement. For one thing, it's
-not a full query yet. In order to make this useful, at a minimum we need to
+...but this isn't a full query yet. In order to make this useful, we need to
 return something::
 
     >>> print(match.return_())
-    MATCH (n:Person {hair_color: {hair_color_n}, name: {name_n}, age: {age_n}})
+    MATCH (n:`Person`)
     RETURN *
 
 .. note::
     Notice the function is **return_**, not **return**. The latter would cause
-    a syntax error since ``return`` is a Python reserved word.
+    a syntax error since ``return`` is a reserved word in Python.
 
 .. _return-signature:
 
@@ -125,7 +124,7 @@ return something::
 Return
 ------
 
-If you call :py:meth:`~neoalchemy.cypher.CypherVerb.return_` with no arguments,
+If you call :py:meth:`~neoalchemy.cypher.SimpleQuery.return_` with no arguments,
 the resulting query will ``RETURN *``, returning everything you have matched.
 `For performance reasons`_, however, this is often not the best choice. There
 are several ways to return only what you need instead of everything you've
@@ -134,18 +133,19 @@ touched.
 ============================  ==========================================  ========================
  What to Return                NeoAlchemy                                  Cypher Equivalent
 ============================  ==========================================  ========================
- One node                      ``return_('node')``                         ``RETURN node``
- Many nodes                    ``return_(['n', 'm'])``                     ``RETURN n, m``
- One property                  ``return_({'n': 'name'})``                  ``RETURN n.name``
- Many properties               ``return_({'n': ['x', 'y']})``              ``RETURN n.x, n.y``
- Nodes with properties         ``return_({'m': 'x', 'n': 'y'})``           ``RETURN m.x, n.y``
- Nodes with many properties    ``return_({'m': 'x', 'n': ['y', 'z']})``    ``RETURN m.x, n.y, n.z``
+ One node                      ``return_(person_n)``                       ``RETURN n``
+ Many nodes                    ``return_(person_n, person_m)``             ``RETURN n, m``
+ One property                  ``return_(person_n['name'])``               ``RETURN n.name``
+ Many properties               ``return_(person_n['x'], person_n['y'])``   ``RETURN n.x, n.y``
+ Many nodes and properties     ``return_(person_m['x'], person_n['y'])``   ``RETURN m.x, n.y``
 ============================  ==========================================  ========================
 
 .. note::
-    The :py:meth:`~neoalchemy.cypher.CypherVerb.remove` and
-    :py:meth:`~neoalchemy.cypher.CypherVerb.delete` methods work the same way.
-    They correspond to Cypher's `REMOVE`_ and `DELETE`_.
+    The :py:meth:`~neoalchemy.cypher.SimpleQuery.remove` and
+    :py:meth:`~neoalchemy.cypher.SimpleQuery.delete` methods work the same way.
+    They correspond to Cypher's `REMOVE`_ and `DELETE`_. Also note that, unlike
+    in pure Cypher, ``REMOVE`` cannot be used to remove labels through the
+    NeoAlchemy APIs.
 
 .. _cypher-expression:
 
@@ -153,11 +153,11 @@ touched.
 Where
 -----
 
-As with :py:meth:`~neoalchemy.cypher.CypherVerb.set`, the
-:py:meth:`~neoalchemy.cypher.CypherVerb.where` method can be used to set
+As with :py:meth:`~neoalchemy.cypher.SimpleQuery.set`, the
+:py:meth:`~neoalchemy.cypher.SimpleQuery.where` method can be used to set
 parameters one at a time::
 
-    match = Match(Person).where(Person.name=='Ali')
+    match = Match(person).where(person['name']=='Ali')
 
 The first argument is a :py:class:`CypherExpression` object, which is
 automatically created when you perform the corresponding Python comparison
@@ -166,12 +166,12 @@ using one of the NodeType's Properties.
 =======================  =============================  =======================
  Comparison Type          NeoAlchemy CypherExpression    Cypher Equivalent
 =======================  =============================  =======================
- Equal to                 ``Person.name == 'Ali'``       ``n.name = 'Ali'``
- Not equal to             ``Person.name != 'Ali'``       ``n.name <> 'Ali'``
- Greater than             ``Person.age > 29``            ``n.age > 29``
- Greater than or equal    ``Person.age >= 29``           ``n.age >= 29``
- Lesser than              ``Person.age < 29``            ``n.age < 29``
- Lesser than or equal     ``Person.age <= 29``           ``n.age <= 29``
+ Equal to                 ``person['name'] == 'Ali'``    ``n.name = 'Ali'``
+ Not equal to             ``person['name'] != 'Ali'``    ``n.name <> 'Ali'``
+ Greater than             ``person['age'] > 29``         ``n.age > 29``
+ Greater than or equal    ``person['age'] >= 29``        ``n.age >= 29``
+ Lesser than              ``person['age'] < 29``         ``n.age < 29``
+ Lesser than or equal     ``person['age'] <= 29``        ``n.age <= 29``
 =======================  =============================  =======================
 
 .. _chaining:
@@ -183,49 +183,64 @@ Chaining
 An important concept in NeoAlchemy is method chaining. Most methods ``return
 self`` so you can call them like so::
 
-    match = Match(Person).where(Person.name=='Ali').return_({'n': 'name'})
+    match = Match(person).where(person['name']=='Ali').return_(person['name'])
 
 This makes for convenient and expressive one-liners. However, this also means
 that state is easy to build up over time and as part of larger algorithms::
 
-    match = Match(Person)
+    match = Match(person)
     # ... some code ...
-    match.where(Person.age=age)
+    match.where(person['age']=age)
     # ... more code...
     match.return_(ret_params)
+
+.. _binding:
+
+======================
+Binding & Primary Keys
+======================
+
+Often instead of specifying individual where clauses, it will be preferable to
+match on a set of the Node's Properties that define what it is. One way to do
+this in NeoAlchemy is by *binding* the Node to those Properties::
+
+    >>> print(Match(person))
+    MATCH (n:`Person`)
+    >>> ali = Node('Person', name='Ali', var='n')
+    >>> print(Match(ali.bind('name')))
+    MATCH (n:`Person`)
+        WHERE n.name = {n_name}
+
+Setting certain Properties as the *primary keys* of a Node will give it a
+default binding::
+
+   >>> person = Node('Person', name=Property(primary_key=True), var='n')
+   >>> print(Match(person.bind()))
+    MATCH (n:`Person`)
+        WHERE n.name = {n_name}
 
 -------------
 Relationships
 -------------
 
-.. image:: iconography.svg
-   :width: 50%
-   :alt: Cypher: (a)-[:KNOWS]->(b) NeoAlchemy: (a)['KNOWS'](b)
-   :align: left
+So far, we have only worked with nodes. NeoAlchemy also provides a
+:py:class:`Relationship` class. Relationships in NeoAlchemy always have a
+type. To create a relationship::
 
-Like `Cypher`_, NeoAlchemy "describes patterns in graphs visually using an
-ascii-art syntax"::
+    >>> from neoalchemy import Relationship
+    >>> knows = Relationship('KNOWS')
 
-    Create(Person, 'a')['KNOWS'](Person, 'b')
+Relationships aren't much good without start and end nodes, though. Let's
+connect two Person nodes who know each other::
 
-This creates exactly the relationship you would expect::
+   >>> knows.start_node = person.copy(var='a')
+   >>> knows.end_node = person.copy(var='b')
+   >>> print(Create(knows))
+   CREATE (a)-[rel:`KNOWS`]->(b)
 
-    >>> Person = NodeType('Person', Property('name'))
-    >>> create = Create(Person, 'a')['KNOWS'](Person, 'b')
-    >>> print(create)
-    CREATE (a:Person {name: {name_a}})-[r1:KNOWS]->(b:Person {name: {name_b}})
-    >>> create.params
-    {'name_a': None, 'name_b': None}
-
-This is another form of chaining! This not only means that relationship chains
-can be arbitrarily long::
-
-    Create(Person)['KNOWS'](Person)['KNOWS'](Person)['KNOWS'](Person)
-
-It also means that you can write things like this::
-
-    Match(Person).where(Person.name=='Ali')['KNOWS'](Person)
-    # MATCH (n:Person)-[r1:KNOWS]->(n1:Person) WHERE n.name = {name_n}
+But wait! This isn't the right Cypher query. In order to use relationships
+with Cypher query builders, we must first build up match statements to grab
+the right end nodes.
 
 ================
 Set Combinations
@@ -234,28 +249,44 @@ Set Combinations
 Not all Cypher queries are one line, and neither are all NeoAlchemy queries.
 You can use Python's set operators to combine several NeoAlchemy objects into
 multi-line queries before returning. The ``&`` (`set intersection`_) operator
-is used for line-by-line cominbation::
+is used for line-by-line cominbation. The most typical way this will be used
+is with relationships in order to fully specify them for Creating or Matching::
 
-    >>> match = (Match(Person).where(Person.name=='Ali')&
-    ...          Match(Person, 'n', optional=True)['KNOWS'](Person, 'm')
-    ...             .where(Person.name=='Frank', 'm'))
-    >>> print(match.return_('r1'))
-    MATCH (n:Person) WHERE n.name = {name_n}
-    OPTIONAL MATCH (n:Person)-[r1:KNOWS]->(m:Person) WHERE m.name = {name_m}
-    RETURN r1
+    >>> ali = Node('Person', name='Ali', var='ali').bind('name')
+    >>> frank = Node('Person', name='Frank', var='frank').bind('name')
+    >>> knows = Relationship('KNOWS', ali, frank)
+    >>> print(Match(ali) & Match(frank) & Match(knows))
+    MATCH (ali:`Person`)
+        WHERE ali.name = {ali_name}
+    MATCH (frank:`Person`)
+        WHERE frank.name = {frank_name}
+    MATCH (ali)-[rel:`KNOWS`]->(frank)
 
 The ``|`` (`set union`_) operator is used for ``UNION ALL``. To borrow an
 example from the Cypher docs::
 
-    >>> Movie = NodeType('Movie', Property('title'))
-    >>> (Match(Person)['ACTED_IN'](Movie).return_({'n': 'name', 'n1': 'title'})|
-    ...  Match(Person)['DIRECTED'](Movie).return_({'n': 'name', 'n1': 'title'}))
-    >>> print(_)
-    MATCH (n:Person {name: {name_n}})-[r1:ACTED_IN]->(n1:Movie {title: {title_n1}})
-    RETURN n.name, n1.title
+    >>> movie = Node('Movie', title=Property(primary_key=True), var='movie')
+    >>> actor = Node('Actor', name=Property(primary_key=True), var='actor')
+    >>> acted_in = Relationship('ACTED_IN', actor, movie)
+    >>> directed = Relationship('DIRECTED', actor, movie)
+    >>> actor_match = (
+    ...     (Match(actor) & Match(movie) & Match(acted_in))
+    ...      .return_(actor['name'], movie['title'])
+    ... )
+    >>> director_match = (
+    ...     (Match(actor) & Match(movie) & Match(directed))
+    ...      .return_(actor['name'], movie['title'])
+    ... )
+    >>> print(actor_match | director_match)
+    MATCH (actor:`Actor`)
+    MATCH (movie:`Movie`)
+    MATCH (actor)-[rel:`ACTED_IN`]->(movie)
+    RETURN actor.name, movie.title
     UNION ALL
-    MATCH (n:Person {name: {name_n}})-[r1:DIRECTED]->(n1:Movie {title: {title_n1}})
-    RETURN n.name, n1.title
+    MATCH (actor:`Actor`)
+    MATCH (movie:`Movie`)
+    MATCH (actor)-[rel:`DIRECTED`]->(movie)
+    RETURN actor.name, movie.title
 
 If you instead want ``UNION``, use the ``^`` (`exclusive or`_) operator.
 
@@ -266,11 +297,10 @@ If you instead want ``UNION``, use the ``^`` (`exclusive or`_) operator.
 
 .. _the Neo4J Docs: http://neo4j.com/docs/developer-manual/current/#graphdb-neo4j-schema-indexes
 .. _familiar Cypher verbs: https://neo4j.com/docs/developer-manual/current/cypher/clauses/
-.. _Neo4J StatementResult: https://neo4j.com/docs/api/python-driver/current/#neo4j.v1.StatementResult
-.. _For performance reasons: https://neo4j.com/docs/developer-manual/current/#query-tuning
+.. _Neo4J StatementResult: https://neo4j.com/docs/api/python-driver/current/session.html?highlight=statementresult#neo4j.v1.StatementResult
+.. _For performance reasons: https://neo4j.com/docs/developer-manual/current/cypher/query-tuning
 .. _REMOVE: https://neo4j.com/docs/developer-manual/current/#query-remove
 .. _DELETE: https://neo4j.com/docs/developer-manual/current/#query-delete
-.. _Cypher: https://neo4j.com/developer/cypher-query-language/
 .. _set intersection: https://docs.python.org/3/library/stdtypes.html#set.intersection
 .. _set union: https://docs.python.org/3/library/stdtypes.html#set.union
 .. _exclusive or: https://docs.python.org/3/library/stdtypes.html#set.symmetric_difference

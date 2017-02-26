@@ -6,9 +6,10 @@ QueryBuilder Classes
 
 .. py:module:: neoalchemy.cypher
 
-.. py:class:: CypherVerb
+.. py:class:: SimpleQuery
 
-    Parent class to :py:class:`Create` and :py:class:`Match`.
+    Parent class to :py:class:`Create`, :py:class:`Match`, and
+    :py:class:`Merge`.
 
     .. py:attribute:: params
 
