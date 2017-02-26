@@ -1,32 +1,32 @@
 
 
 **********
-Schema ORM
+Schema OGM
 **********
 
-We could make an ORM version of ``Person`` like this::
+The Schema OGM (Object Graph Mapper) allows you to use Python classes to specify
+the structure of Nodes. We could make an OGM version of ``person`` like this::
 
-    from neoalchemy import Node, Property, Graph
+    from neoalchemy import OGMBase, Property, Graph
 
-    class Person(Node):
+    class Person(OGMBase):
         graph = Graph()
 
         name = Property(unique=True)
         age = Property(type=int)
         hair_color = Property()
 
-Note that this subclasses :py:class:`Node`, not :py:class:`NodeType`. We don't
-need to call :py:meth:`graph.schema.add` here; it is automatically done for us
-by Node's `metaclass`_.  **As soon as your class definition is read into
-memory, the appropriate indexes and/or constraints are written to the graph.**
-This is designed for convenient use in apps, especially in Frameworks like
-`Flask`_, so that the graph is kept up to date as soon as your class is
+We don't need to call :py:meth:`graph.schema.add` here; it is automatically
+done for us by the OGMBase `metaclass`_.  **As soon as your class definition is
+read into memory, the appropriate indexes and/or constraints are written to the
+graph.** This is designed for convenient use in apps, especially in Frameworks
+like `Flask`_, so that the graph is kept up to date as soon as your class is
 imported for the first time.
 
 If this behavior is undesired, it can be avoided by not attaching a graph
 instance to the class until after it is created::
 
-    class Person(Node):
+    class Person(OGMBase):
         name = Property(unique=True)
         age = Property(type=int)
         hair_color = Property()
@@ -34,9 +34,9 @@ instance to the class until after it is created::
     Person.graph = Graph()
 
 If you do it this way, you must remember to write the schema yourself later
-using :py:meth:`graph.schema.add` on the underlying :py:class:`NodeType`::
+using :py:meth:`graph.schema.add`::
 
-    Person.graph.schema.add(Person.__nodetype__)
+    Person.graph.schema.add(Person)
 
 .. warning::
     From `the Neo4J Docs`_:
