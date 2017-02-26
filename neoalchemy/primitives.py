@@ -42,9 +42,9 @@ class Node(GraphObject):
     def copy(self, shallow=False, **properties):
         var = properties.pop('var', self.var)
         if shallow:
-            copy = Node(graph=self.graph, var=var, *self.labels)
+            copy = Node(self, graph=self.graph, var=var)
         else:
-            copy = Node(graph=self.graph, var=var, *self.labels,
+            copy = Node(self, graph=self.graph, var=var,
                         **{key: prop.copy() for key, prop in self.items()})
         if self.is_bound:
             copy.bind(*self.bound_keys)
