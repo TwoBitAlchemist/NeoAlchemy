@@ -64,8 +64,8 @@ the current values for each parameter by inspecting the
     {'node_age': None, 'node_hair_color': None, 'node_name': None}
 
 Each parameter is named according to its associated property and the variable
-representing its associated node in the underlying Cypher. The default
-parameter is ``node``. This can be freely changed to whatever you like::
+representing its associated node in the underlying Cypher. The default node
+variable is ``node``. This can be freely changed to whatever you like::
 
     >>> person.var = 'n'
     >>> print(Create(person))
@@ -299,8 +299,8 @@ If you instead want ``UNION``, use the ``^`` (`exclusive or`_) operator.
 .. _familiar Cypher verbs: https://neo4j.com/docs/developer-manual/current/cypher/clauses/
 .. _Neo4J StatementResult: https://neo4j.com/docs/api/python-driver/current/session.html?highlight=statementresult#neo4j.v1.StatementResult
 .. _For performance reasons: https://neo4j.com/docs/developer-manual/current/cypher/query-tuning
-.. _REMOVE: https://neo4j.com/docs/developer-manual/current/#query-remove
-.. _DELETE: https://neo4j.com/docs/developer-manual/current/#query-delete
+.. _REMOVE: https://neo4j.com/docs/developer-manual/current/cypher/clauses/remove/
+.. _DELETE: https://neo4j.com/docs/developer-manual/current/cypher/clauses/delete/
 .. _set intersection: https://docs.python.org/3/library/stdtypes.html#set.intersection
 .. _set union: https://docs.python.org/3/library/stdtypes.html#set.union
 .. _exclusive or: https://docs.python.org/3/library/stdtypes.html#set.symmetric_difference
