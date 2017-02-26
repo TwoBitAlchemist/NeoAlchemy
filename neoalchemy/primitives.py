@@ -20,7 +20,7 @@ class NodeMeta(type):
 @six.add_metaclass(NodeMeta)
 class Node(GraphObject):
     def __init__(self, *labels, **properties):
-        var = properties.pop('var', 'node')
+        var = properties.pop('var', None)
         if len(labels) == 1 and isinstance(labels[0], Node):
             node = labels[0]
             properties.update({key: prop.copy() for key, prop in node.items()})
@@ -30,10 +30,10 @@ class Node(GraphObject):
         if node is not None:
             self.labels = node.labels
             self.type = node.type
-            self.var = node.var
+            self.var = var or node.var
         else:
             self.labels = labels
-            self.var = var
+            self.var = var or 'node'
             try:
                 self.type = labels[-1]
             except IndexError:
