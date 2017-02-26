@@ -219,9 +219,9 @@ default binding::
     MATCH (n:`Person`)
         WHERE n.name = {n_name}
 
--------------
+=============
 Relationships
--------------
+=============
 
 So far, we have only worked with nodes. NeoAlchemy also provides a
 :py:class:`Relationship` class. Relationships in NeoAlchemy always have a
