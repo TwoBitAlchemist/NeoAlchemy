@@ -74,7 +74,7 @@ QueryBuilder Classes
 
         Set the ``WHERE`` clause for the query.
 
-    :param CypherExpression expr: See the docs for :ref:`cypher-expression`
+    :param CypherExpression exprs: See the docs for :ref:`cypher-expression`
     :param bool or\_: If set, this will be joined with the preceding ``WHERE``
                       clause using ``OR`` instead of ``AND``.
     :return: The object itself, to support :ref:`chaining`.
@@ -87,13 +87,13 @@ QueryBuilder Classes
 
 .. py:class:: Match(obj, optional=False)
 
-    :param GraphObject obj: The :py:class:`GraphObject` to create.
+    :param GraphObject obj: The :py:class:`GraphObject` to match.
     :param bool optional: If set, ``OPTIONAL MATCH`` instead.
 
 
 .. py:class:: Merge(obj)
 
-    :param GraphObject obj: The :py:class:`GraphObject` to create.
+    :param GraphObject obj: The :py:class:`GraphObject` to merge.
 
     .. :py:method:: on_create()
 
