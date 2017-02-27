@@ -48,11 +48,11 @@ using :py:meth:`graph.schema.add`::
       come *online*. That means that it is now ready to be used in queries.
 
 
-==============
-Node Instances
-==============
+===================
+OGM Class Instances
+===================
 
-The ORM is built on top of :doc:`query-builder`, but uses several convenience
+The OGM is built on top of :doc:`query-builder`, but uses several convenience
 methods so that you don't have to build your own queries. When you instantiate,
 you can choose between passing in parameter values to the constructor::
 
@@ -65,9 +65,9 @@ Or you can set them individually::
     person.hair_color = 'red'
 
 
-------
-Create
-------
+--------------
+Create & Merge
+--------------
 
 A node instance can be created on the graph like so::
 
@@ -81,7 +81,18 @@ node with its currently set values.
     on the node. Likewise, setting any property to ``NULL`` is equivalent to
     removing it. This is a limitation of Cypher.
 
+Usually you will want to merge instead::
 
-.. _metaclass: https://stackoverflow.com/q/100003/
+    person.merge()
+
+Internally, merge uses `ON CREATE and ON MATCH`_ to either set all properties
+(on create) or just those which have changed (on match).
+
+The biggest difference between creating and merging is that merge will
+keep updating the same node, while create will keep spawning new instances.
+
+
+.. _metaclass: http://stackoverflow.com/q/100003/
 .. _Flask: http://flask.pocoo.org/
 .. _the Neo4J Docs: http://neo4j.com/docs/developer-manual/current/#graphdb-neo4j-schema-indexes
+.. _ON CREATE and ON MATCH: http://neo4j.com/docs/developer-manual/current/cypher/clauses/merge/#_use_on_create_and_on_match
