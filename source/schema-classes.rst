@@ -100,7 +100,7 @@ Schema Classes
         :py:method::`~neoalchemy.cypher.SimpleQuery.where`)
         corresponding to the ``EXISTS`` function in Cypher.
 
-        :param bool exists: If False, do ``NOT EXISTS`` instead. Default is True.
+    :param bool exists: If False, do ``NOT EXISTS`` instead. Default is True.
 
 
 .. py:class:: Property(obj=None, type=str, default=None, value=None,\
@@ -162,7 +162,7 @@ Schema Classes
 
     .. py:attribute:: schema
 
-        A reference to the Graph's :py:class:`Schema` object.
+        A reference to the Graph's :py:class:`graph.schema` object.
 
     .. py:method:: session
 
@@ -228,8 +228,8 @@ Schema Classes
         Refresh constraints, indexes, and labels.
 
 
-.. _a session from the underlying driver: https://neo4j.com/docs/developer-manual/current/#session
-.. _neo4j.v1.StatementResult: https://neo4j.com/docs/developer-manual/current/#results
-.. _create an index: https://neo4j.com/docs/developer-manual/current/#schema-index-create-an-index
-.. _create a unique constraint: https://neo4j.com/docs/developer-manual/current/#query-constraints-unique-nodes
+.. _a session from the underlying driver: https://neo4j.com/docs/developer-manual/current/drivers/run-statements/#_sessions
+.. _neo4j.v1.StatementResult: https://neo4j.com/docs/api/python-driver/current/session.html?highlight=statementresult#neo4j.v1.StatementResult
+.. _create an index: https://neo4j.com/docs/developer-manual/current/cypher/schema/index/
+.. _create a unique constraint: https://neo4j.com/docs/developer-manual/current/cypher/schema/constraints/
 .. _create a property existence constraint: https://neo4j.com/docs/developer-manual/current/#query-constraints-prop-exist-nodes
