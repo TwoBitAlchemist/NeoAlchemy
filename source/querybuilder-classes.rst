@@ -56,13 +56,12 @@ QueryBuilder Classes
     :param bool distinct: If set, ``RETURN DISTINCT`` instead.
     :return: The object itself, to support :ref:`chaining`.
 
-    .. py:method:: set(property, value, var='n')
+    .. py:method:: set(property, value)
 
         Set a property to a value. Can be called multiple times.
 
     :param Property property: The property to set
     :param any value: The value of the property to set
-    :param str var: The variable representing the node in Cypher.
     :return: The object itself, to support :ref:`chaining`.
 
     .. py:method:: skip(n)
@@ -71,26 +70,35 @@ QueryBuilder Classes
 
     :param int n: The argument to ``SKIP``
 
-    .. py:method:: where(expr, var='n', or_=False)
+    .. py:method:: where(exprs, or_=False)
 
         Set the ``WHERE`` clause for the query.
 
     :param CypherExpression expr: See the docs for :ref:`cypher-expression`
-    :param str var: The variable representing the node in Cypher.
     :param bool or\_: If set, this will be joined with the preceding ``WHERE``
                       clause using ``OR`` instead of ``AND``.
     :return: The object itself, to support :ref:`chaining`.
 
 
-.. py:class:: Create(nodetype, var='n', unique=False, **params)
+.. py:class:: Create(obj)
 
-    :param NodeType nodetype: The NodeType used to construct the query.
-    :param str var: The variable representing the node in Cypher.
-    :param bool unique: If set, ``CREATE UNIQUE`` instead.
+    :param GraphObject obj: The :py:class:`GraphObject` to create.
 
 
-.. py:class:: Match(nodetype, var='n', optional=False, **params)
+.. py:class:: Match(obj, optional=False)
 
-    :param NodeType nodetype: The NodeType used to construct the query.
-    :param str var: The variable representing the node in Cypher.
+    :param GraphObject obj: The :py:class:`GraphObject` to create.
     :param bool optional: If set, ``OPTIONAL MATCH`` instead.
+
+
+.. py:class:: Merge(obj)
+
+    :param GraphObject obj: The :py:class:`GraphObject` to create.
+
+    .. :py:method:: on_create()
+
+        Insert an ``ON CREATE`` where called.
+
+    .. :py:method:: on_match()
+
+        Insert an ``ON MATCH`` where called.
