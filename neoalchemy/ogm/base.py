@@ -71,7 +71,7 @@ class OGMMeta(type):
         except AttributeError:
             pass
         else:
-            graph.schema.add(cls)
+            graph.schema.create(cls)
             cls.__node__.graph = graph
 
 
@@ -170,17 +170,17 @@ class OGMBase(object):
                 raise UnboundedWriteOperation(rel.end_node, extra_info)
         return rel
 
-    def add_relation(self, rel_type, related, **kw):
+    def create_relation(self, rel_type, related, **kw):
         rel = self.init_relation(rel_type, related, **kw)
-        merge = (
+        create = (
             (Match(rel.start_node) &
              Match(rel.end_node) &
-             Merge(rel))
+             Create(rel))
             .return_(Count(rel))
         )
-        return self.graph.query(merge, **merge.params)
+        return self.graph.query(create, **create.params)
 
-    def drop_relation(self, rel_type, related, **kw):
+    def delete_relation(self, rel_type, related, **kw):
         rel = self.init_relation(rel_type, related, **kw)
         match = (
             (Match(rel.start_node) &
@@ -191,7 +191,7 @@ class OGMBase(object):
         )
         return self.graph.query(match, **match.params)
 
-    def get_relations(self, rel_type, *labels, **properties):
+    def match_relations(self, rel_type, *labels, **properties):
         rev = properties.pop('rev', False)
         rel = Relationship(rel_type, depth=properties.pop('depth', None))
         if rev:
@@ -208,3 +208,13 @@ class OGMBase(object):
         )
         return Rehydrator(self.graph.query(match, **match.params),
                           self.graph)
+
+    def merge_relation(self, rel_type, related, **kw):
+        rel = self.init_relation(rel_type, related, **kw)
+        merge = (
+            (Match(rel.start_node) &
+             Match(rel.end_node) &
+             Merge(rel))
+            .return_(Count(rel))
+        )
+        return self.graph.query(merge, **merge.params)

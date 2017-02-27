@@ -22,9 +22,9 @@ We'll call this one ``person`` and give it a few simple characteristics::
     )
 
 Don't forget to create the indexes and constraints you specified using
-:py:meth:`graph.schema.add`::
+:py:meth:`graph.schema.create`::
 
-    graph.schema.add(person)
+    graph.schema.create(person)
 
 .. warning::
     From `the Neo4J Docs`_:

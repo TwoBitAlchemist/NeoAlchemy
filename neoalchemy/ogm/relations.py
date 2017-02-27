@@ -13,7 +13,7 @@ class ManyToOneDescriptor(object):
         if instance is None:
             self.relation
 
-        return instance.get_relations(self.relation.type, rev=True).one
+        return instance.match_relations(self.relation.type, rev=True).one
 
     def __set__(self, instance, value):
         raise ImmutableAttributeError(self.name, instance)
@@ -63,7 +63,7 @@ class Relation(object):
                               restrict_types=self.restricted_types,
                               **dict(self.unbound_args))
 
-    def add(self, related):
+    def create(self, related):
         if self.restricted_types:
             if not any(label in related.__node__.labels
                        for label in self.restricted_types):
@@ -71,13 +71,26 @@ class Relation(object):
                 raise ValueError("Related object is '%r' but must be one of: "
                                  "'%s'" % (related,
                                            ', '.join(restricted_types)))
-        return self.obj.add_relation(self.type, related, **self.__unbound_args)
+        return self.obj.create_relation(self.type, related,
+                                        **self.__unbound_args)
 
-    def drop(self, related):
-        return self.obj.drop_relation(self.type, related, **self.__unbound_args)
+    def delete(self, related):
+        return self.obj.delete_relation(self.type, related,
+                                        **self.__unbound_args)
 
     def match(self, *labels, **properties):
-        return self.obj.get_relations(self.type, *labels, **properties)
+        return self.obj.match_relations(self.type, *labels, **properties)
+
+    def merge(self, related):
+        if self.restricted_types:
+            if not any(label in related.__node__.labels
+                       for label in self.restricted_types):
+                restricted_types = map(str, self.restricted_types)
+                raise ValueError("Related object is '%r' but must be one of: "
+                                 "'%s'" % (related,
+                                           ', '.join(restricted_types)))
+        return self.obj.merge_relation(self.type, related,
+                                       **self.__unbound_args)
 
     def create_backref(self, cls):
         raise NotImplementedError

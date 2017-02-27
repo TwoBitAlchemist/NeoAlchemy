@@ -16,7 +16,7 @@ the structure of Nodes. We could make an OGM version of ``person`` like this::
         age = Property(type=int)
         hair_color = Property()
 
-We don't need to call :py:meth:`graph.schema.add` here; it is automatically
+We don't need to call :py:meth:`graph.schema.create` here; it is automatically
 done for us by the OGMBase `metaclass`_.  **As soon as your class definition is
 read into memory, the appropriate indexes and/or constraints are written to the
 graph.** This is designed for convenient use in apps, especially in Frameworks
@@ -34,9 +34,9 @@ instance to the class until after it is created::
     Person.graph = Graph()
 
 If you do it this way, you must remember to write the schema yourself later
-using :py:meth:`graph.schema.add`::
+using :py:meth:`graph.schema.create`::
 
-    Person.graph.schema.add(Person)
+    Person.graph.schema.create(Person)
 
 .. warning::
     From `the Neo4J Docs`_:

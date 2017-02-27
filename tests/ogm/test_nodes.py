@@ -35,7 +35,7 @@ def test_a_customer_places_an_order(clear_graph):
     order_id = order.id
     assert isinstance(order, Order)
     assert order.id is not None
-    customer.orders.add(order)
+    customer.orders.merge(order)
     assert len(list(customer.orders.match())) == 1
     customer = Customer.match(email='seregon@gmail.com').one
     assert isinstance(customer, Customer)
@@ -48,6 +48,6 @@ def test_a_customer_places_an_order(clear_graph):
     assert order.customer.email == 'seregon@gmail.com'
     item = OrderItem(line_item='bread', price='2.00').create()
     other_item = OrderItem(line_item='milk', price='3.00').create()
-    order.items.add(item)
-    order.items.add(other_item)
+    order.items.merge(item)
+    order.items.merge(other_item)
     assert len(list(order.items.match())) == 2

@@ -57,13 +57,13 @@ The same thing in NeoAlchemy looks like this::
     )
 
     # Emit schema-generating DDL
-    graph.schema.add(user)
+    graph.schema.create(user)
 
 
 This creates a simple :py:class:`Node` with three properties similar to the
 above table. Each property represents an available `constraint`_ in Neo4J. The
-proper indexes and constraints are created when :py:meth:`graph.schema.add` is
-called.
+proper indexes and constraints are created when :py:meth:`graph.schema.create`
+is called.
 
 .. note::
     The ``required`` property represents a `Property Existence constraint`_

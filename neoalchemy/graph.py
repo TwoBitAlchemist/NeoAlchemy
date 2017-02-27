@@ -126,9 +126,9 @@ class Schema(object):
         self.__hierarchy = dict()
         self.__relations = dict()
 
-    def add(self, obj):
+    def create(self, obj):
         """
-        Add the object's schema, if not already present.
+        Create the object's schema, if not already present.
         """
         node = obj.__node__
         if not node.type or node.type in self.__schema:
