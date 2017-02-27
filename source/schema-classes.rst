@@ -152,8 +152,8 @@ Schema Classes
 
         Run an arbitrary query against the graph, with optional parameters.
 
-        When not called, returns a reference to the Graph's :py:class:`Query`
-        object.
+        When not called, returns a reference to the Graph's
+        :py:class:`graph.query` object.
 
     :param query: An object that stringifies to a Cypher query.
     :param params: The values for the query's parameters.
