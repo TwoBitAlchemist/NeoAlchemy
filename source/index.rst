@@ -28,5 +28,5 @@ version 3.0 or higher! If you don't have an environment set up, consider
    schema-OGM
    schema-classes
    querybuilder-classes
-   ORM-classes
+   OGM-classes
    roadmap
