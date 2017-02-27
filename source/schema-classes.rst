@@ -97,8 +97,8 @@ Schema Classes
 
     .. py:method:: exists(exists=True)
 
-    Returns a CypherExpression (which can be used with :py:method::`where`)
-    corresponding to the ``EXISTS`` function in Cypher.
+    Returns a CypherExpression corresponding to the ``EXISTS`` function
+    in Cypher.
 
     :param bool exists: If False, do ``NOT EXISTS`` instead. Default is True.
 
