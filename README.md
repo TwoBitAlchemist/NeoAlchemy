@@ -30,24 +30,25 @@ Low-Level QueryBuilder API
 ``` python
 import uuid
 
-from neoalchemy import NodeType, Property, Graph
-from neoalchemy.cypher import Create
-from neoalchemy.types import valid_uuid
+from neoalchemy import Create, Node, Property, Graph
+from neoalchemy.validators import UUID
 
 graph = Graph()
 
-Person = NodeType('Person',  # primary label
-    Property('uuid', unique=True, type=valid_uuid, default=uuid.uuid4),
-    Property('real_name', indexed=True),
-    Property('screen_name', indexed=True, type=str.lower),
-    Property('age', type=int)
+person = Node('Person',  # primary label
+    uuid=Property(unique=True, type=UUID, default=uuid.uuid4),
+    real_name=Property(indexed=True),
+    screen_name=Property(indexed=True, type=str.lower),
+    age=Property(type=int)
 )
 
 # Emit schema-generating DDL
-graph.schema.add(Person)
+graph.schema.create(person)
 
-create = Create(Person).set(real_name='Alison', screen_name='Ali42')
-create.set(age=29).compile()
+person.real_name = 'Alison'
+person.screen_name = 'Ali42'
+person.age = 29
+create = Create(person)
 
 graph.query(create, **create.params)
 ```
@@ -55,28 +56,30 @@ graph.query(create, **create.params)
 [Learn more about the QueryBuilder API][5].
 
 
-High-Level Schema ORM
+High-Level Schema OGM
 ---------------------
 
 ``` python
 import uuid
 
-from neoalchemy import Node, Property, Graph
-from neoalchemy.types import valid_uuid
+from neoalchemy import OGMBase, Property, Graph
+from neoalchemy.validators import UUID
 
-class Person(Node):
+class Person(OGMBase):
     graph = Graph()
 
-    uuid = Property(unique=True, type=valid_uuid, default=uuid.uuid4)
+    uuid = Property(unique=True, type=UUID, default=uuid.uuid4)
     real_name = Property(indexed=True)
     screen_name = Property(indexed=True, type=str.lower)
     age = Property(type=int)
 
 # Cypher schema generation emitted automatically
 # No user action required
+
+Person(real_name='Alison', screen_name='Ali42', age=29).create()
 ```
 
-[Learn more about the Schema ORM][6].
+[Learn more about the Schema OGM][6].
 
 [1]: https://pypi.python.org/pypi/neoalchemy
 [2]: https://neo4j.com/developer/python/
