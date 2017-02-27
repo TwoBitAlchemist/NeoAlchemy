@@ -94,6 +94,7 @@ Schema Classes
                                 automatically converted into Property objects
                                 of the default string type.
 
+
     .. :py:method:: exists(exists=True)
 
         Returns a CypherExpression (which can be used with
@@ -190,12 +191,18 @@ Schema Classes
 
 .. py:class:: graph.schema
 
-    .. py:method:: graph.schema.add(nodetype, overwrite=False)
+    .. py:method:: graph.schema.create(node)
 
-        Add a NodeType to the schema.
+        Create the schema for the Node.
 
-    :param NodeType nodetype: The NodeType instance to add to the schema
-    :param bool overwrite: If set, DROP and re-CREATE any existing schema
+    :param Node node: The Node instance to add to the schema
+    :rtype: None
+
+    .. py:method:: graph.schema.drop(node)
+
+        Drop the schema for the Node.
+
+    :param Node node: The Node instance to drop from the schema
     :rtype: None
 
     .. py:attribute:: graph.schema.constraints
