@@ -90,7 +90,8 @@ class OGMBase(object):
             setattr(self, rel_name, rel.copy(obj=self))
 
     def bind(self, *keys):
-        return self.__node__.bind(*keys)
+        self.__node__.bind(*keys)
+        return self
 
     @property
     def bound_keys(self):
