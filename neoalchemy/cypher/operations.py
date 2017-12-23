@@ -143,6 +143,9 @@ class CypherOperatorInterface(object):
     def __ge__(self, x):          # self >= x
         return ComparisonExpression(self, x, '>=')
 
+    def like(self, x):
+        return ComparisonExpression(self, '.*%s.*' % x, '=~')
+
 
 class ComparisonExpression(CypherExpression, CypherOperatorInterface):
     def __init__(self, left_operand, right_operand, operator, reverse=False):
